@@ -1,0 +1,43 @@
+{
+  "name": "rti-sahayak",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype: getting an RTI request to the right place, before the citizen pays.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "test": "playwright test",
+    "test:journey": "playwright test tests/journey.spec.ts",
+    "test:nojs": "playwright test tests/nojs.spec.ts --project=no-js",
+    "test:screens": "playwright test tests/screens.spec.ts",
+    "contrast": "node scripts/contrast.mjs",
+    "verify": "npm run build && npm run contrast && npm run typescale && npm run test:clock && npm run test",
+    "test:clock": "node --test tests/*.test.mts",
+    "typescale": "node scripts/typescale.mjs"
+  },
+  "dependencies": {
+    "next": "16.3.2",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@opennextjs/cloudflare": "1.20.2",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.86.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.4": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260820.1": true
+  }
+}

@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.open-next/
+out/
+.env*
+.dev.vars
+.wrangler/
+next-env.d.ts
+cloudflare-env.d.ts
+*.tsbuildinfo
+.DS_Store
+screens/
+test-results/
+playwright-report/
+data-in/*
+!data-in/README.md
