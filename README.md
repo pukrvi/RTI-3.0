@@ -73,6 +73,11 @@ And because an account around politically sensitive requests is a real trade-off
 one stores as little as possible: an opaque cookie, a contact string, a 24-hour TTL. No
 Aadhaar, no PAN, no passwords — and the page says so.
 
+**Planned, not yet implemented:** Aadhaar-based identity verification for the account.
+Until that change actually ships, this prototype collects no Aadhaar data and sign-in is
+email or mobile plus a code — this line stays in the README so the gap is visible rather
+than implied.
+
 ### 4. A UI built for the citizen who actually uses it
 
 The design constraint throughout: a budget Android phone on a 3G connection.
@@ -139,7 +144,7 @@ back to keyword matching without an `OPENAI_API_KEY`.
 ## Credits
 
 Designed, audited and built by **Puneet Vishnawat**
-([puneetv@gtmbuddy.ai](mailto:puneetv@gtmbuddy.ai)).
+([pukrvi@gmail.com](mailto:pukrvi@gmail.com)).
 
 Built from a read-only audit of the live portal on 22 August 2026 — 13 documented gaps,
 75 observations, and a benchmark against WhatDoTheyKnow, FOIA.gov and Mexico's PNT.
