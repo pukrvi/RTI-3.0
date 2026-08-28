@@ -1322,3 +1322,84 @@ html[data-contrast="high"] .filing-hot { border-color: var(--line); }
   a::after { content: " (" attr(href) ")"; font-size: var(--fs-sm); }
   .site-footer { background: #fff; color: #000; }
 }
+
+/* ================================================================== deck == */
+/* The project doc (/project-doc) renders as a pitch deck: one idea per
+   slide, the least text that carries it, and no fourth type style. Every
+   colour and size here is an existing token, so the contrast and type-scale
+   checks keep covering it without changes. */
+
+.deck-slide {
+  border-top: 1px solid var(--line);
+  padding: 2.75rem 0 3.25rem;
+}
+.deck-slide:nth-of-type(even) { background: var(--surface-2); }
+.deck-slide:first-of-type { border-top: 0; padding-top: 1rem; }
+.deck-final { background: var(--brand-soft); }
+
+.deck-kicker {
+  color: var(--ink-muted);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 0.6rem;
+}
+
+.deck-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1.12;
+  margin: 0 0 1rem;
+  max-width: 30ch;
+}
+
+.deck-sub {
+  color: var(--ink-muted);
+  margin: 0 0 1.5rem;
+  max-width: 56ch;
+}
+
+.deck-points {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  max-width: 62ch;
+  padding: 0;
+}
+.deck-points li {
+  margin-bottom: 0.6rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+.deck-points li::before {
+  color: var(--brand);
+  content: "—";
+  font-weight: var(--fw-medium);
+  left: 0;
+  position: absolute;
+}
+
+.deck-chips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.deck-chip {
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-tint);
+  border-radius: 999px;
+  color: var(--brand-dark);
+  font-weight: var(--fw-medium);
+  padding: 0.3rem 0.85rem;
+}
+.deck-chip-ghost {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink-muted);
+}
+.deck-chip-arrow { color: var(--ink-soft); }
+
+.deck-note { color: var(--ink-muted); margin: 1.25rem 0 0; }

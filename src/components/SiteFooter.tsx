@@ -6,6 +6,8 @@ import type { Translate } from "@/i18n";
  * carries the live disclosure, and the full "what is real, what is mocked"
  * breakdown lives on /about — so the footer keeps only a single quiet reminder
  * with a link to that page, plus the links people expect at the foot of a site.
+ * The project doc is footer-only by design: it is written for reviewers of the
+ * build, not for a citizen mid-journey, and nothing else on the site links to it.
  */
 export default function SiteFooter({
   t,
@@ -33,6 +35,9 @@ export default function SiteFooter({
           </li>
           <li>
             <Link href={`/${locale}/published`}>{t("nav.published")}</Link>
+          </li>
+          <li>
+            <Link href={`/${locale}/project-doc`}>{t("footer.projectDoc")}</Link>
           </li>
         </ul>
       </div>
