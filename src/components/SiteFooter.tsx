@@ -2,8 +2,7 @@ import Link from "next/link";
 import type { Translate } from "@/i18n";
 
 /**
- * A slim footer on every page. The one-line notice at the top of every page
- * carries the live disclosure, and the full "what is real, what is mocked"
+ * A slim footer on every page. The full "what is real, what is mocked"
  * breakdown lives on /about — so the footer keeps only a single quiet reminder
  * with a link to that page, plus the links people expect at the foot of a site.
  * The project doc is footer-only by design: it is written for reviewers of the

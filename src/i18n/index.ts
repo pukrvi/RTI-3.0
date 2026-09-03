@@ -61,6 +61,15 @@ export function isRtl(locale: string): boolean {
 export const LOCALE_TAGS: Record<string, string> = {
   en: "en-IN",
   hi: "hi-IN",
+  bn: "bn-IN",
+  gu: "gu-IN",
+  kn: "kn-IN",
+  ml: "ml-IN",
+  mr: "mr-IN",
+  or: "or-IN",
+  ta: "ta-IN",
+  te: "te-IN",
+  ur: "ur-IN",
 };
 
 export function localeTag(locale: string): string {

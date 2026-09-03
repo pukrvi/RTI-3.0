@@ -31,12 +31,9 @@ test("journey screenshots", async ({ page }, testInfo) => {
   await shot("00g-contact");
 
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill("someone@example.org");
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.waitForURL(/login\/code/);
-  await shot("00h-otp");
-  await page.getByLabel("Six-digit code").fill("123456");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill("someone@example.org");
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL(/\/en\/account$/);
   await shot("00i-account");
 

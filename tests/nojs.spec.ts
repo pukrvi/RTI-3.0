@@ -72,16 +72,6 @@ test("the accessibility controls work with scripting disabled", async ({ page })
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
 });
 
-test("the notice is always there when the script is not", async ({ page }) => {
-  // Closing it is a convenience, not a requirement: with no JavaScript the
-  // notice simply stays, which is the safe direction to fail in.
-  await page.goto("/en");
-  await expect(page.locator(".proto-line")).toBeVisible();
-  await page.goto("/en/help");
-  await expect(page.locator(".proto-line")).toBeVisible();
-  await expect(page.locator(".site-footer")).toContainText("Unofficial prototype");
-});
-
 test("the mobile menu opens without scripting", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/en");
@@ -111,21 +101,18 @@ test("the authority filter is a plain GET form when the script never arrives", a
 
 test("logging in works with scripting disabled", async ({ page }) => {
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill("nojs@example.org");
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.waitForURL(/login\/code/);
-  await page.getByLabel("Six-digit code").fill("424242");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill("nojs@example.org");
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL(/\/en\/account$/);
   await expect(page.getByText("Logged in as nojs@example.org")).toBeVisible();
 });
 
 test("the account works with scripting disabled", async ({ page }) => {
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill("nojs-acct@example.org");
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.getByLabel("Six-digit code").fill("135790");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill("nojs-acct@example.org");
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL(/\/en\/account$/);
 
   // The side menu is plain links, so it needs nothing to arrive.

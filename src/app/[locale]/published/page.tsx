@@ -4,6 +4,14 @@ import { formatDate, getT } from "@/i18n";
 import { PUBLISHED } from "@/data/published";
 import { REPLIES } from "@/data/replies";
 import { AUTHORITIES } from "@/data/authorities";
+import {
+  publishedSummary,
+  publishedTitle,
+  publishedVariants,
+  replyAnswer,
+  replyQuestion,
+  replyVariants,
+} from "@/data/locale-text";
 import { authorityName } from "@/lib/case";
 
 /**
@@ -40,26 +48,26 @@ export default async function PublishedPage({
     ...PUBLISHED.map((p) => ({
       id: p.id,
       kind: "disclosure" as const,
-      title: locale === "hi" ? p.titleHi : p.title,
+      title: publishedTitle(p, locale),
       meta: `${t(`check.kind.${p.kind}`)} · ${t("check.updated", {
         date: formatDate(p.updated, locale),
       })}`,
-      body: locale === "hi" ? p.summaryHi : p.summary,
+      body: publishedSummary(p, locale),
       authority: nameOf(p.authorityId),
       haystack: norm(
-        [p.title, p.titleHi, p.summary, p.summaryHi, nameOf(p.authorityId), ...p.keywords].join(" "),
+        [...publishedVariants(p), nameOf(p.authorityId), ...p.keywords].join(" "),
       ),
     })),
     ...REPLIES.map((r) => ({
       id: r.id,
       kind: "reply" as const,
-      title: locale === "hi" ? r.questionHi : r.question,
+      title: replyQuestion(r, locale),
       meta: t("arch.askedBy", {
         who: r.requester,
         filed: formatDate(r.filed, locale),
         replied: formatDate(r.replied, locale),
       }),
-      body: locale === "hi" ? r.answerHi : r.answer,
+      body: replyAnswer(r, locale),
       authority: nameOf(r.authorityId),
       outcome: {
         label: t(`arch.outcome.${r.outcome}`),
@@ -69,7 +77,7 @@ export default async function PublishedPage({
           | "stop",
       },
       haystack: norm(
-        [r.question, r.questionHi, r.answer, r.answerHi, nameOf(r.authorityId), ...r.keywords].join(" "),
+        [...replyVariants(r), nameOf(r.authorityId), ...r.keywords].join(" "),
       ),
     })),
   ];

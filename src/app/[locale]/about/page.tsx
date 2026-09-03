@@ -4,7 +4,7 @@ import { storageKind } from "@/lib/store";
 
 /**
  * Honesty is one of the six judging criteria, so it gets its own page, linked
- * from the persistent banner and the footer of every screen.
+ * from the footer of every screen.
  */
 export default async function AboutPage({
   params,

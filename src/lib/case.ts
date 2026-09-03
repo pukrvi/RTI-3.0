@@ -9,6 +9,7 @@
 import { cookies } from "next/headers";
 import { getCase, type CaseFile } from "@/lib/store";
 import { AUTHORITIES, type Authority } from "@/data/authorities";
+import { AUTHORITY_NAMES } from "@/data/authority-names";
 
 export const CASE_COOKIE = "rti_case";
 
@@ -45,5 +46,18 @@ export function centralAuthorities(): Authority[] {
 
 /** The authority's name in the citizen's language, where we have one. */
 export function authorityName(authority: Authority, locale: string): string {
-  return locale === "hi" && authority.nameHi ? authority.nameHi : authority.name;
+  if (locale === "hi" && authority.nameHi) return authority.nameHi;
+  return AUTHORITY_NAMES[locale]?.[authority.id]?.name || authority.name;
+}
+
+/** The out-of-scope redirect note in the citizen's language, where we have one. */
+export function redirectNote(authority: Authority, locale: string): string | undefined {
+  if (locale === "hi" && authority.redirect?.noteHi) return authority.redirect.noteHi;
+  return AUTHORITY_NAMES[locale]?.[authority.id]?.redirectNote ?? authority.redirect?.note;
+}
+
+/** The out-of-scope redirect label in the citizen's language, where we have one. */
+export function redirectLabel(authority: Authority, locale: string): string | undefined {
+  if (locale === "hi" && authority.redirect?.labelHi) return authority.redirect.labelHi;
+  return AUTHORITY_NAMES[locale]?.[authority.id]?.redirectLabel ?? authority.redirect?.label;
 }

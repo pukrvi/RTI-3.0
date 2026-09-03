@@ -466,6 +466,42 @@ export async function startLogin(form: FormData) {
   redirect(`/${locale}/login/code`);
 }
 
+/**
+ * The Aadhaar way in: a labelled demo, like everything else in this flow. A
+ * real integration would hand off to UIDAI eKYC and come back with a verified
+ * identity; there is no such handoff here, so the button sets a visibly
+ * masked demo identity and continues into the same simulated code step as the
+ * contact flow — any six digits, nothing sent.
+ */
+export async function startAadhaarLogin(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  await setPending({ contact: getT(locale)("auth.login.aadhaarDemo"), method: "email" });
+  redirect(`/${locale}/login/code`);
+}
+
+/**
+ * The card on /login signs in directly: any username and any password work.
+ * The password is read by nobody and stored nowhere — there is no credential
+ * here to steal, only a demo of the step. Anything already filed in this
+ * browser joins the account, exactly as in verifyCode.
+ */
+export async function signInWithPassword(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const contact = str(form, "contact");
+  if (!contact) redirect(`/${locale}/login?error=contact`);
+
+  const session = { contact, method: methodFor(contact) };
+  await signIn(session);
+
+  const draft = await requireCase();
+  if (draft?.filed) {
+    await updateCase(draft.id, { owner: session.contact });
+    await addToAccount(session.contact, draft.id);
+  }
+
+  redirect(`/${locale}/account`);
+}
+
 export async function verifyCode(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const code = str(form, "code").replace(/\s/g, "");

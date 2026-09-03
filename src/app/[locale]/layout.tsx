@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ChromeGate from "@/components/ChromeGate";
 import Icon from "@/components/Icon";
-import PrototypeBanner from "@/components/PrototypeBanner";
 import TopActions from "@/components/TopActions";
 import MainNav from "@/components/MainNav";
 import SiteFooter from "@/components/SiteFooter";
@@ -88,14 +87,6 @@ export default async function LocaleLayout({
       <body>
         <div className="shell">
           <ChromeGate hiddenOn="/ask/chat">
-          <PrototypeBanner
-            locale={locale}
-            tag={t("banner.tag")}
-            text={t("banner.oneLine")}
-            moreLabel={t("banner.more")}
-            closeLabel={t("banner.close")}
-          />
-
           {/* One unified masthead: the mark anchors the left and spans both
               rows. To its right, on wide screens the utility controls
               (language, text size, contrast) sit top-right, with the task
