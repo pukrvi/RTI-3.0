@@ -78,6 +78,16 @@ Until that change actually ships, this prototype collects no Aadhaar data and si
 email or mobile plus a code — this line stays in the README so the gap is visible rather
 than implied.
 
+### Trying it: the demo account
+
+Sign in with **Email `vish@abc.com`, password `Rti@2026`** (any password works; it is
+discarded unread). The account belongs to a synthetic holder, Puneet Vishnawat, and
+ships with eight invented requests covering every state the account screens can show:
+in flight, running out, overdue and appealable, answered in full, answered in part,
+refused under section 8(1)(j), appealed, and withdrawn. Anything you file yourself
+appears alongside them for the session; the seeds themselves are read-only and live in
+`src/data/demo-account.ts`.
+
 ### 4. A UI built for the citizen who actually uses it
 
 The design constraint throughout: a budget Android phone on a 3G connection.

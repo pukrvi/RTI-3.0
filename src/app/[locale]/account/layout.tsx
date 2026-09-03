@@ -67,8 +67,6 @@ export default async function AccountLayout({
               {t("auth.signOut")}
             </button>
           </form>
-
-          <p className="smaller muted acct-note">{t("acct.expiry")}</p>
         </div>
 
         <main id="main" className="acct-main stack-lg">

@@ -14,7 +14,23 @@ import { getProfile } from "@/lib/store";
  * the portal charges first and validates afterwards.
  *
  * No money moves here, and every row says so.
+ *
+ * Transaction IDs and payment modes are synthetic but deterministic: derived
+ * from the registration number with the same FNV-1a hashing the ref helper
+ * uses, so each filing always shows the same receipt line.
  */
+
+/** FNV-1a hash, matching the style of `src/lib/ref.ts`. */
+function txnSeed(ref: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < ref.length; i++) {
+    h ^= ref.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+const MODES = ["acct.pay.mode.upi", "acct.pay.mode.netbanking", "acct.pay.mode.card"] as const;
 export default async function PaymentsPage({
   params,
 }: {
@@ -34,7 +50,10 @@ export default async function PaymentsPage({
   interface Row {
     key: string;
     at: string;
-    what: string;
+    /** Synthetic transaction ID, stable per registration number. Null when nothing was paid. */
+    txn: string | null;
+    /** Synthetic payment mode. Null when nothing was paid. */
+    mode: string | null;
     ref: string;
     amount: number;
     id: string;
@@ -42,10 +61,13 @@ export default async function PaymentsPage({
 
   const rows: Row[] = [];
   for (const item of items) {
+    const seed = txnSeed(item.file.filed!.ref);
+    const paid = fee > 0;
     rows.push({
       key: `${item.file.id}-r`,
       at: item.file.filed!.at,
-      what: t("acct.pay.request"),
+      txn: paid ? `TXN${String(seed % 10_000_000_000).padStart(10, "0")}` : null,
+      mode: paid ? t(MODES[seed % MODES.length]) : null,
       ref: item.file.filed!.ref,
       amount: fee,
       id: item.file.id,
@@ -54,7 +76,8 @@ export default async function PaymentsPage({
       rows.push({
         key: `${item.file.id}-a`,
         at: item.file.appeal.at,
-        what: t("acct.pay.appeal"),
+        txn: null,
+        mode: null,
         ref: item.file.appeal.ref,
         amount: 0,
         id: item.file.id,
@@ -68,7 +91,6 @@ export default async function PaymentsPage({
     <>
       <div>
         <h1 className="mb-0">{t("acct.pay.h1")}</h1>
-        <p className="muted">{t("acct.pay.lead")}</p>
       </div>
 
       {rows.length === 0 ? (
@@ -87,7 +109,8 @@ export default async function PaymentsPage({
             <thead>
               <tr>
                 <th scope="col">{t("acct.pay.colDate")}</th>
-                <th scope="col">{t("acct.pay.colWhat")}</th>
+                <th scope="col">{t("acct.pay.colTxn")}</th>
+                <th scope="col">{t("acct.pay.colMode")}</th>
                 <th scope="col">{t("acct.pay.colRef")}</th>
                 <th scope="col" className="num">
                   {t("acct.pay.colAmount")}
@@ -100,7 +123,8 @@ export default async function PaymentsPage({
                   <td>
                     <time dateTime={row.at}>{formatDate(row.at, locale)}</time>
                   </td>
-                  <td>{row.what}</td>
+                  <td>{row.txn ?? "—"}</td>
+                  <td>{row.mode ?? "—"}</td>
                   <th scope="row">
                     <Link className="refno" href={`/${locale}/track/${row.id}`}>
                       {row.ref}
@@ -112,7 +136,7 @@ export default async function PaymentsPage({
             </tbody>
             <tfoot>
               <tr>
-                <th scope="row" colSpan={3}>
+                <th scope="row" colSpan={4}>
                   {t("acct.pay.total")}
                 </th>
                 <td className="num">₹{total}</td>
@@ -123,13 +147,6 @@ export default async function PaymentsPage({
       )}
 
       {!bpl && <p className="small muted">{t("acct.pay.bplNote")}</p>}
-
-      <section className="callout callout-info" aria-labelledby="recon">
-        <h2 id="recon" className="callout-title">
-          {t("acct.pay.reconTitle")}
-        </h2>
-        <p className="mb-0">{t("acct.pay.reconBody")}</p>
-      </section>
     </>
   );
 }

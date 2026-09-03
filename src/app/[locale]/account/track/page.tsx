@@ -25,14 +25,17 @@ export default async function TrackStatusPage({
   const session = (await currentSession())!;
   const { items } = await loadAccount(session.contact, locale);
 
-  const open = items.filter((i) => i.clock.state !== "replied" && !i.file.appeal);
-  const closed = items.filter((i) => i.clock.state === "replied" || i.file.appeal);
+  const open = items.filter(
+    (i) => i.clock.state !== "replied" && !i.file.appeal && !i.file.deleted,
+  );
+  const closed = items.filter(
+    (i) => i.clock.state === "replied" || i.file.appeal || i.file.deleted,
+  );
 
   return (
     <>
       <div>
         <h1 className="mb-0">{t("acct.track.h1")}</h1>
-        <p className="muted">{t("acct.track.lead")}</p>
       </div>
 
       <section className="section" aria-labelledby="open">
@@ -63,7 +66,6 @@ export default async function TrackStatusPage({
 
       <section className="section" aria-labelledby="lookup">
         <h2 id="lookup">{t("acct.track.lookupTitle")}</h2>
-        <p className="small muted">{t("acct.track.lookupBody")}</p>
 
         {error === "notfound" && (
           <div className="callout callout-stop" role="alert">

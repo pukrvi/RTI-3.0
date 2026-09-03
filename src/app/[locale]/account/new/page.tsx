@@ -53,7 +53,6 @@ export default async function NewRequestPage({
             <Icon name="search" />
             {t("acct.new.searchTitle")}
           </h2>
-          <p className="muted">{t("acct.new.searchBody")}</p>
           <p className="mb-0">
             <Link className="btn btn-secondary btn-sm" href={`/${locale}/ask`}>
               {t("acct.new.searchCta")}
@@ -66,7 +65,6 @@ export default async function NewRequestPage({
             <Icon name="archive" />
             {t("acct.new.pubTitle")}
           </h2>
-          <p className="muted">{t("acct.new.pubBody")}</p>
           <p className="mb-0">
             <Link className="btn btn-secondary btn-sm" href={`/${locale}/published`}>
               {t("acct.new.pubCta")}
@@ -79,7 +77,6 @@ export default async function NewRequestPage({
             <Icon name="building" />
             {t("acct.new.dirTitle")}
           </h2>
-          <p className="muted">{t("acct.new.dirBody")}</p>
           <p className="mb-0">
             <Link className="btn btn-secondary btn-sm" href={`/${locale}/authorities`}>
               {t("acct.new.dirCta")}

@@ -59,7 +59,6 @@ export default async function ProfilePage({
     <>
       <div>
         <h1 className="mb-0">{t("acct.profile.h1")}</h1>
-        <p className="muted">{t("acct.profile.lead")}</p>
       </div>
 
       {saved && (
@@ -82,45 +81,39 @@ export default async function ProfilePage({
         <fieldset className="card">
           <legend>{t("acct.profile.secPersonal")}</legend>
 
-          <div className="field">
-            <label htmlFor="name">{t("acct.profile.name")}</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              autoComplete="name"
-              defaultValue={p.name ?? ""}
-            />
-          </div>
+          <div className="form-row">
+            <div className="field">
+              <label htmlFor="name">{t("acct.profile.name")}</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                autoComplete="name"
+                defaultValue={p.name ?? ""}
+              />
+            </div>
 
-          <div className="field">
-            <label htmlFor="email">{t("acct.profile.email")}</label>
-            <span className="hint" id="email-hint">
-              {t("acct.profile.emailHint")}
-            </span>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              autoComplete="email"
-              aria-describedby="email-hint"
-              defaultValue={p.email ?? session.contact}
-            />
+            <div className="field">
+              <label htmlFor="email">{t("acct.profile.email")}</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autoComplete="email"
+                defaultValue={p.email ?? session.contact}
+              />
+            </div>
           </div>
 
           <div className="form-row">
             <div className="field">
               <label htmlFor="mobile">{t("acct.profile.mobile")}</label>
-              <span className="hint" id="mobile-hint">
-                {t("acct.profile.mobileHint")}
-              </span>
               <input
                 type="tel"
                 id="mobile"
                 name="mobile"
                 inputMode="tel"
                 autoComplete="tel"
-                aria-describedby="mobile-hint"
                 defaultValue={p.mobile ?? ""}
               />
             </div>
@@ -139,23 +132,80 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          <fieldset className="subset">
-            <legend>{t("acct.profile.gender")}</legend>
-            {radios(t, "gender", p.gender, [
-              ["male", "acct.profile.gender.male"],
-              ["female", "acct.profile.gender.female"],
-              ["third", "acct.profile.gender.third"],
-            ])}
-          </fieldset>
+          <div className="form-row">
+            <fieldset className="subset">
+              <legend>{t("acct.profile.gender")}</legend>
+              {radios(t, "gender", p.gender, [
+                ["male", "acct.profile.gender.male"],
+                ["female", "acct.profile.gender.female"],
+                ["third", "acct.profile.gender.third"],
+              ])}
+            </fieldset>
 
-          <fieldset className="subset">
-            <legend>{t("acct.profile.education")}</legend>
-            <p className="hint">{t("acct.profile.educationHint")}</p>
-            {radios(t, "education", p.education, [
-              ["literate", "acct.profile.education.literate"],
-              ["illiterate", "acct.profile.education.illiterate"],
-            ])}
-          </fieldset>
+            <fieldset className="subset">
+              <legend>{t("acct.profile.education")}</legend>
+              {radios(t, "education", p.education, [
+                ["literate", "acct.profile.education.literate"],
+                ["illiterate", "acct.profile.education.illiterate"],
+              ])}
+            </fieldset>
+          </div>
+
+          <div className="form-row">
+            <fieldset className="subset">
+              <legend>{t("acct.profile.citizenship")}</legend>
+              {radios(t, "citizenship", p.citizenship ?? "indian", [
+                ["indian", "acct.profile.citizenship.indian"],
+                ["other", "acct.profile.citizenship.other"],
+              ])}
+              {p.citizenship === "other" && (
+                <p className="error-text">{t("acct.profile.citizenshipWarn")}</p>
+              )}
+            </fieldset>
+
+            <fieldset className="subset">
+              <legend>{t("acct.profile.bpl")}</legend>
+              {radios(t, "bpl", p.bpl ?? "no", [
+                ["yes", "acct.profile.bpl.yes"],
+                ["no", "acct.profile.bpl.no"],
+              ])}
+            </fieldset>
+          </div>
+
+          <div className="callout callout-mock bpl-details">
+            <p className="callout-title">{t("acct.profile.bplWarn")}</p>
+            <div className="form-row mt-1">
+              <div className="field mb-0">
+                <label htmlFor="bplCard">{t("acct.profile.bplCard")}</label>
+                <input
+                  type="text"
+                  id="bplCard"
+                  name="bplCard"
+                  autoComplete="off"
+                  defaultValue={p.bplCard ?? ""}
+                />
+              </div>
+              <div className="field mb-0">
+                <label htmlFor="bplYear">{t("acct.profile.bplYear")}</label>
+                <input
+                  type="text"
+                  id="bplYear"
+                  name="bplYear"
+                  inputMode="numeric"
+                  defaultValue={p.bplYear ?? ""}
+                />
+              </div>
+            </div>
+            <div className="field mb-0 mt-1">
+              <label htmlFor="bplAuthority">{t("acct.profile.bplAuthority")}</label>
+              <input
+                type="text"
+                id="bplAuthority"
+                name="bplAuthority"
+                defaultValue={p.bplAuthority ?? ""}
+              />
+            </div>
+          </div>
         </fieldset>
 
         <fieldset className="card">
@@ -212,14 +262,10 @@ export default async function ProfilePage({
             </div>
             <div className="field">
               <label htmlFor="state">{t("acct.profile.state")}</label>
-              <span className="hint" id="state-hint">
-                {t("acct.profile.stateHint")}
-              </span>
               <select
                 id="state"
                 name="state"
                 defaultValue={p.state ?? ""}
-                aria-describedby="state-hint"
               >
                 <option value="">{t("acct.profile.statePick")}</option>
                 {STATES.map((s) => (
@@ -231,81 +277,22 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          <fieldset className="subset">
-            <legend>{t("acct.profile.country")}</legend>
-            {radios(t, "country", p.country ?? "india", [
-              ["india", "acct.profile.country.india"],
-              ["other", "acct.profile.country.other"],
-            ])}
-          </fieldset>
+          <div className="form-row">
+            <fieldset className="subset">
+              <legend>{t("acct.profile.country")}</legend>
+              {radios(t, "country", p.country ?? "india", [
+                ["india", "acct.profile.country.india"],
+                ["other", "acct.profile.country.other"],
+              ])}
+            </fieldset>
 
-          <fieldset className="subset">
-            <legend>{t("acct.profile.habitation")}</legend>
-            <p className="hint">{t("acct.profile.habitationHint")}</p>
-            {radios(t, "habitation", p.habitation, [
-              ["rural", "acct.profile.habitation.rural"],
-              ["urban", "acct.profile.habitation.urban"],
-            ])}
-          </fieldset>
-        </fieldset>
-
-        <fieldset className="card">
-          <legend>{t("acct.profile.secEligibility")}</legend>
-
-          <fieldset className="subset">
-            <legend>{t("acct.profile.citizenship")}</legend>
-            <p className="hint">{t("acct.profile.citizenshipHint")}</p>
-            {radios(t, "citizenship", p.citizenship ?? "indian", [
-              ["indian", "acct.profile.citizenship.indian"],
-              ["other", "acct.profile.citizenship.other"],
-            ])}
-            {p.citizenship === "other" && (
-              <p className="error-text">{t("acct.profile.citizenshipWarn")}</p>
-            )}
-          </fieldset>
-
-          <fieldset className="subset">
-            <legend>{t("acct.profile.bpl")}</legend>
-            <p className="hint">{t("acct.profile.bplHint")}</p>
-            {radios(t, "bpl", p.bpl ?? "no", [
-              ["yes", "acct.profile.bpl.yes"],
-              ["no", "acct.profile.bpl.no"],
-            ])}
-          </fieldset>
-
-          <div className="callout callout-mock">
-            <p className="callout-title">{t("acct.profile.bplWarn")}</p>
-            <div className="form-row mt-1">
-              <div className="field mb-0">
-                <label htmlFor="bplCard">{t("acct.profile.bplCard")}</label>
-                <input
-                  type="text"
-                  id="bplCard"
-                  name="bplCard"
-                  autoComplete="off"
-                  defaultValue={p.bplCard ?? ""}
-                />
-              </div>
-              <div className="field mb-0">
-                <label htmlFor="bplYear">{t("acct.profile.bplYear")}</label>
-                <input
-                  type="text"
-                  id="bplYear"
-                  name="bplYear"
-                  inputMode="numeric"
-                  defaultValue={p.bplYear ?? ""}
-                />
-              </div>
-            </div>
-            <div className="field mb-0 mt-1">
-              <label htmlFor="bplAuthority">{t("acct.profile.bplAuthority")}</label>
-              <input
-                type="text"
-                id="bplAuthority"
-                name="bplAuthority"
-                defaultValue={p.bplAuthority ?? ""}
-              />
-            </div>
+            <fieldset className="subset">
+              <legend>{t("acct.profile.habitation")}</legend>
+              {radios(t, "habitation", p.habitation, [
+                ["rural", "acct.profile.habitation.rural"],
+                ["urban", "acct.profile.habitation.urban"],
+              ])}
+            </fieldset>
           </div>
         </fieldset>
 
@@ -320,20 +307,6 @@ export default async function ProfilePage({
           )}
         </div>
       </form>
-
-      <div className="grid-2">
-        <section className="callout callout-info">
-          <h2 className="callout-title">{t("acct.profile.useIt")}</h2>
-          <p className="mb-0">{t("acct.profile.useItBody")}</p>
-        </section>
-        <section className="callout callout-ok">
-          <h2 className="callout-title">
-            <Icon name="check" />
-            {t("acct.profile.noIds")}
-          </h2>
-          <p className="mb-0">{t("acct.profile.noIdsBody")}</p>
-        </section>
-      </div>
     </>
   );
 }
