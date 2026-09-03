@@ -11,10 +11,9 @@ import { axeScan, beginRequest, continueFromChat, watchConsole } from "./helpers
 
 async function login(page: Page, contact: string) {
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill(contact);
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.getByLabel("Six-digit code").fill("246810");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill(contact);
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/account$/);
 }
 

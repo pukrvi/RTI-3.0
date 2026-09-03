@@ -16,7 +16,6 @@ test.describe("pre-filing journey", () => {
 
     await page.goto("/");
     await expect(page).toHaveURL(/\/en$/);
-    await expect(page.locator(".proto-line")).toContainText("Unofficial prototype");
 
     // 1 — Ask, in plain language, through the assistant.
     await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");

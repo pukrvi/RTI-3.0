@@ -49,19 +49,6 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   expect(problems, problems.join("\n")).toHaveLength(0);
 });
 
-test("the top notice is one line, with its close control on that line", async ({ page }) => {
-  await page.goto("/en");
-  const box = await page.locator(".proto-line .page").boundingBox();
-  const close = await page.getByRole("button", { name: "Close this notice" }).boundingBox();
-  expect(box).not.toBeNull();
-  expect(close).not.toBeNull();
-  // The close button sits at the end of the bar, vertically inside it — not
-  // wrapped onto a second row underneath the text.
-  expect(close!.y).toBeGreaterThanOrEqual(box!.y - 1);
-  expect(close!.y + close!.height).toBeLessThanOrEqual(box!.y + box!.height + 1);
-  expect(close!.x).toBeGreaterThan(box!.x + box!.width / 2);
-});
-
 test("the live portal's own menu items are all reachable", async ({ page }) => {
   await page.goto("/en");
   const menu = await nav(page).open();
@@ -80,21 +67,16 @@ test("the live portal's own menu items are all reachable", async ({ page }) => {
   await axeScan(page, "login");
 });
 
-test("login, one-time code, and everything in one place", async ({ page }) => {
+test("login signs in with anything, because it is a demo", async ({ page }) => {
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill("someone@example.org");
-  await page.getByRole("button", { name: "Send me a code" }).click();
-
-  await expect(page).toHaveURL(/\/en\/login\/code$/);
-  await expect(page.getByText("someone@example.org")).toBeVisible();
-  await expect(page.getByText(/No code was generated and nothing was sent/)).toBeVisible();
-  await axeScan(page, "one-time code");
-
-  // Any six digits, because none was ever generated.
-  await page.getByLabel("Six-digit code").fill("123456");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await axeScan(page, "login");
+  await page.getByLabel("Email ID").fill("someone@example.org");
+  await page.getByLabel("Password").fill("anything-at-all");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
 
   await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page.getByText("someone@example.org")).toBeVisible();
+
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
   await expect(page.getByText("Logged in as someone@example.org")).toBeVisible();
   await axeScan(page, "account dashboard");
@@ -116,10 +98,9 @@ test("a request filed while logged in appears in the account", async ({ page }) 
   // A fresh contact each run: the mock store keeps whatever earlier runs filed.
   const contact = `demo-${Date.now()}@example.org`;
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill(contact);
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.getByLabel("Six-digit code").fill("000000");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill(contact);
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page.getByText("Nothing filed from this account yet.")).toBeVisible();
 
   await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
@@ -168,25 +149,6 @@ test("every Eighth Schedule language is listed, two of them work", async ({ page
   );
 });
 
-test("the notice closes for this page, and comes back", async ({ page }) => {
-  await page.goto("/en");
-  await expect(page.locator(".proto-line")).toBeVisible();
-  await page.getByRole("button", { name: "Close this notice" }).click();
-  await expect(page.locator(".proto-line")).toHaveCount(0);
-
-  // A disclosure somebody can switch off for good is not a disclosure. It
-  // returns on the next load, and on the homepage.
-  await page.reload();
-  await expect(page.locator(".proto-line")).toBeVisible();
-  await nav(page).go("Help & FAQ");
-  await expect(page).toHaveURL(/\/en\/help$/);
-  await expect(page.locator(".proto-line")).toBeVisible();
-
-  // And the footer disclosure cannot be dismissed at all.
-  await expect(page.locator(".site-footer")).toContainText("Not a government website");
-  await expect(page.locator(".site-footer")).toContainText("Unofficial prototype");
-});
-
 test("text size and high contrast are set on the server and persist", async ({ page }) => {
   await page.goto("/en");
   await expect(page.locator("html")).toHaveAttribute("data-text", "base");
@@ -212,13 +174,12 @@ test("the assistant opens on a disclosure screen, then runs full screen", async 
 }) => {
   await page.goto("/en/ask");
 
-  // The disclosure screen is an ordinary page: site header, footer and
-  // prototype banner, like everywhere else. Only the chat is a tool.
+  // The disclosure screen is an ordinary page: site header and footer,
+  // like everywhere else. Only the chat is a tool.
   // (The nav class differs by viewport: .mainnav desktop, .navmenu mobile.)
   await expect(page.locator(".topbar")).toBeVisible();
   await expect(page.locator(".mainnav:visible, .navmenu:visible")).toBeVisible();
   await expect(page.locator(".site-footer")).toBeVisible();
-  await expect(page.locator(".proto-line")).toBeVisible();
   await axeScan(page, "assistant intro");
 
   // It says what it does before you start.
@@ -370,10 +331,9 @@ test("a tracking link can be read by anyone, but only changed by its owner", asy
 
   // And it can be found again from the registration number alone, from the account.
   await page.goto("/en/login");
-  await page.getByLabel("Email address or mobile number").fill("someone@example.org");
-  await page.getByRole("button", { name: "Send me a code" }).click();
-  await page.getByLabel("Six-digit code").fill("111111");
-  await page.getByRole("button", { name: "Verify and log in" }).click();
+  await page.getByLabel("Email ID").fill("someone@example.org");
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.getByRole("link", { name: "Track status" }).click();
   await page.getByLabel("Registration number").fill(ref);
   await page.getByRole("button", { name: "Find it" }).click();

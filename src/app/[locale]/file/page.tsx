@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import Icon from "@/components/Icon";
 import MatchedTokens from "@/components/MatchedTokens";
 import { formatDate, getT } from "@/i18n";
-import { authorityName, centralAuthorities, currentCase } from "@/lib/case";
+import { authorityName, centralAuthorities, currentCase, redirectLabel, redirectNote } from "@/lib/case";
+import { publishedTitle } from "@/data/locale-text";
 import { matchPublished, verdict } from "@/lib/match";
 import { scaffoldBody, scaffoldSubject } from "@/lib/scaffold";
 import { currentSession } from "@/lib/session";
@@ -116,15 +117,11 @@ export default async function FilePage({
             </p>
             <p>
               <strong>{t("authority.outOfScopeWhy")}: </strong>
-              {locale === "hi"
-                ? stateStop.state.item.redirect?.noteHi
-                : stateStop.state.item.redirect?.note}
+              {redirectNote(stateStop.state.item, locale)}
             </p>
             <p>
               <strong>{t("authority.outOfScopeGo")}: </strong>
-              {locale === "hi"
-                ? stateStop.state.item.redirect?.labelHi
-                : stateStop.state.item.redirect?.label}
+              {redirectLabel(stateStop.state.item, locale)}
             </p>
             <p>
               <strong>{t("authority.charged")}</strong>
@@ -150,7 +147,7 @@ export default async function FilePage({
               {published.map(({ item }) => (
                 <li key={item.id}>
                   <Link href={`/${locale}/public-answer/${item.id}`}>
-                    {locale === "hi" ? item.titleHi : item.title}
+                    {publishedTitle(item, locale)}
                   </Link>{" "}
                   <span className="small muted">
                     {t(`check.kind.${item.kind}`)} ·{" "}

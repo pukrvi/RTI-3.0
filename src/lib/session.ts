@@ -2,10 +2,12 @@
  * A simulated citizen sign-in.
  *
  * Everything here is mocked, deliberately and visibly. No account is created,
- * no password exists, no one-time code is generated or sent, and the code entry
- * accepts any six digits. There is nothing to steal because there is nothing to
- * store: the "session" is an email address or mobile number the citizen typed,
- * held in a cookie for a day.
+ * no one-time code is generated or sent, and the code entry accepts any six
+ * digits. The card also captures a password, because the design being
+ * demonstrated has one — it is discarded unread and stored nowhere. There is
+ * nothing to steal because there is nothing to store: the "session" is an
+ * email address or mobile number the citizen typed, held in a cookie for
+ * a day.
  *
  * Worth recording, because it is a real design tension: the live portal has no
  * citizen account at all, and that is one of the few things it gets right — it
@@ -20,7 +22,7 @@ export const SESSION_COOKIE = "rti_session";
 export const PENDING_COOKIE = "rti_pending";
 
 export interface Session {
-  /** Whatever the citizen typed: an email address or a mobile number. */
+  /** Whatever the citizen typed: a username, an email address or a mobile number. */
   contact: string;
   method: "email" | "mobile";
 }

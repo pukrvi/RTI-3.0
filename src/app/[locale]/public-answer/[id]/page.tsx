@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { formatDate, getT } from "@/i18n";
 import { authorityById, authorityName, currentCase } from "@/lib/case";
 import { PUBLISHED } from "@/data/published";
+import { publishedSummary, publishedTitle } from "@/data/locale-text";
 import { continueToRouting, restart } from "../../actions";
 
 /**
@@ -37,13 +38,13 @@ export default async function PublicAnswerPage({
 
           <article className="card">
             <div className="card-head">
-              <h2 className="mb-0">{locale === "hi" ? record.titleHi : record.title}</h2>
+              <h2 className="mb-0">{publishedTitle(record, locale)}</h2>
             </div>
             <p className="small muted">
               <span className="badge badge-plain">{t(`check.kind.${record.kind}`)}</span>{" "}
               {t("check.updated", { date: formatDate(record.updated, locale) })}
             </p>
-            <p>{locale === "hi" ? record.summaryHi : record.summary}</p>
+            <p>{publishedSummary(record, locale)}</p>
             {authority && (
               <p className="small mb-0">
                 <span className="muted">{t("publicAnswer.heldBy")}: </span>

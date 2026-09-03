@@ -2,7 +2,8 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import ScrollToLatest from "@/components/ScrollToLatest";
 import { formatDate, getT } from "@/i18n";
-import { authorityName, currentCase } from "@/lib/case";
+import { authorityName, currentCase, redirectLabel, redirectNote } from "@/lib/case";
+import { publishedTitle, replyAnswer, replyQuestion } from "@/data/locale-text";
 import { matchPublished, matchReplies, verdict } from "@/lib/match";
 import { askAssistant, continueToRouting, restart } from "../../actions";
 
@@ -147,7 +148,7 @@ export default async function WizardChat({
                             {published.map(({ item }) => (
                               <li key={item.id}>
                                 <span className="t">
-                                  {locale === "hi" ? item.titleHi : item.title}
+                                  {publishedTitle(item, locale)}
                                 </span>
                                 <span className="k">
                                   {t(`check.kind.${item.kind}`)} ·{" "}
@@ -184,7 +185,7 @@ export default async function WizardChat({
                             {replies.map(({ item }) => (
                               <li key={item.id}>
                                 <span className="t">
-                                  {locale === "hi" ? item.questionHi : item.question}
+                                  {replyQuestion(item, locale)}
                                 </span>
                                 <span className="k">
                                   {t("arch.askedBy", {
@@ -194,7 +195,7 @@ export default async function WizardChat({
                                   })}
                                 </span>
                                 <p className="ans">
-                                  {locale === "hi" ? item.answerHi : item.answer}
+                                  {replyAnswer(item, locale)}
                                 </p>
                               </li>
                             ))}
@@ -241,15 +242,11 @@ export default async function WizardChat({
                         </div>
                         <div className="body">
                           <p>
-                            {locale === "hi"
-                              ? result.state.item.redirect?.noteHi
-                              : result.state.item.redirect?.note}
+                            {redirectNote(result.state.item, locale)}
                           </p>
                           <p>
                             <strong>{t("authority.outOfScopeGo")}: </strong>
-                            {locale === "hi"
-                              ? result.state.item.redirect?.labelHi
-                              : result.state.item.redirect?.label}
+                            {redirectLabel(result.state.item, locale)}
                           </p>
                           <p>
                             <strong>{t("authority.charged")}</strong>
