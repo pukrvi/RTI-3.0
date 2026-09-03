@@ -70,7 +70,6 @@ export default async function DashboardPage({
     <>
       <div>
         <h1 className="mb-0">{t("acct.dash.h1")}</h1>
-        <p className="muted">{t("acct.dash.lead")}</p>
       </div>
 
       {showDraft && (
@@ -137,7 +136,6 @@ export default async function DashboardPage({
           {countCard(t("acct.dash.requests"), counts.requests)}
           {countCard(t("acct.dash.appeals"), counts.appeals)}
         </div>
-        <p className="small muted">{t("acct.dash.countsNote")}</p>
       </section>
 
       <section className="section" aria-labelledby="details">

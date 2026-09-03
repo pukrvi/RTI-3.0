@@ -47,9 +47,10 @@ export interface AccountView {
   counts: AccountCounts;
 }
 
-/** Filings that can still be appealed, newest first. */
+/** Filings that can still be appealed, newest first. Withdrawn requests can
+ *  never be appealed. */
 export function appealable(items: AccountItem[]): AccountItem[] {
-  return items.filter((i) => i.window.isOpen && !i.file.appeal);
+  return items.filter((i) => i.window.isOpen && !i.file.appeal && !i.file.deleted);
 }
 
 export async function loadAccount(
@@ -66,7 +67,9 @@ export async function loadAccount(
 
     const state: ItemState = clock.state;
     const needsAction =
-      !file.appeal && (state === "replied" || state === "overdue" || window.isOpen);
+      !file.appeal &&
+      !file.deleted &&
+      (state === "replied" || state === "overdue" || window.isOpen);
 
     return {
       file,
@@ -90,9 +93,11 @@ export async function loadAccount(
     counts: {
       requests: {
         registered: requests.length,
-        // "Disposed of" on the portal means the authority has finished with it.
+        // "Disposed of" on the portal means the authority has finished with it:
+        // a reply of any kind, including a refusal. A request the applicant
+        // withdrew sits in Registered only, like a returned request.
         disposed: requests.filter((i) => i.state === "replied").length,
-        pending: requests.filter((i) => i.state !== "replied").length,
+        pending: requests.filter((i) => i.state !== "replied" && !i.file.deleted).length,
       },
       appeals: {
         registered: appeals.length,

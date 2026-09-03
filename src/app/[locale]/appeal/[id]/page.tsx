@@ -35,9 +35,11 @@ export default async function AppealPage({
   const defaultGround =
     win.reason === "overdue"
       ? "no-response"
-      : file.reply?.kind === "partial-refusal"
-        ? "incomplete"
-        : "other";
+      : file.reply?.kind === "refused"
+        ? "refused"
+        : file.reply?.kind === "partial-refusal"
+          ? "incomplete"
+          : "other";
 
   const prefill = appealScaffold(t, {
     ref: file.filed.ref,

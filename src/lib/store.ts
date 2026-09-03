@@ -20,7 +20,14 @@ export interface FiledRecord {
 
 export interface ReplyRecord {
   at: string;
-  kind: "full" | "partial-refusal";
+  kind: "full" | "partial-refusal" | "refused";
+}
+
+/** A filing the applicant withdrew. The fee stays paid; the case needs
+ *  nothing further and can never be appealed. */
+export interface DeletedRecord {
+  at: string;
+  note?: string;
 }
 
 export interface AppealRecord {
@@ -72,6 +79,9 @@ export interface CaseFile {
   filed?: FiledRecord;
   reply?: ReplyRecord;
   appeal?: AppealRecord;
+
+  /** Set when the applicant withdrew the request. See DeletedRecord. */
+  deleted?: DeletedRecord;
 
   /** Demo-only display clock, in days. Never affects stored timestamps. */
   clockOffsetDays: number;
@@ -148,12 +158,17 @@ export function newCaseId(): string {
 export async function getCase(id: string | undefined): Promise<CaseFile | null> {
   if (!id) return null;
   const raw = await (await driver()).get(KEY(id));
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as CaseFile;
-  } catch {
-    return null;
+  if (raw) {
+    try {
+      return JSON.parse(raw) as CaseFile;
+    } catch {
+      return null;
+    }
   }
+  // Seeded demo records ship with the code and live outside the temporary
+  // store, so the demo account works on a fresh clone with no setup.
+  const { demoCaseById } = await import("@/data/demo-account");
+  return demoCaseById(id);
 }
 
 export async function putCase(file: CaseFile): Promise<void> {
@@ -177,7 +192,12 @@ export async function findByRef(ref: string): Promise<CaseFile | null> {
   const cleaned = ref.trim().toUpperCase();
   if (!cleaned) return null;
   const id = await (await driver()).get(REF_KEY(cleaned));
-  return id ? getCase(id) : null;
+  if (id) {
+    const found = await getCase(id);
+    if (found) return found;
+  }
+  const { demoCaseByRef } = await import("@/data/demo-account");
+  return demoCaseByRef(cleaned);
 }
 
 /* ------------------------------------------------- account index ---------
@@ -197,10 +217,16 @@ export async function addToAccount(contact: string, id: string): Promise<void> {
 
 export async function listForAccount(contact: string): Promise<CaseFile[]> {
   const raw = await (await driver()).get(OWNER_KEY(contact));
-  if (!raw) return [];
-  const ids: string[] = JSON.parse(raw);
+  const ids: string[] = raw ? JSON.parse(raw) : [];
   const files = await Promise.all(ids.map((id) => getCase(id)));
-  return files.filter((f): f is CaseFile => Boolean(f));
+  const stored = files.filter((f): f is CaseFile => Boolean(f));
+  // The demo account's seeded records ship with the code. Anything the
+  // visitor files themselves is stored normally and appears alongside them;
+  // stored records win if an id ever collides with a seed.
+  const { DEMO_CASES, isDemoContact } = await import("@/data/demo-account");
+  if (!isDemoContact(contact)) return stored;
+  const seen = new Set(stored.map((f) => f.id));
+  return [...stored, ...DEMO_CASES.filter((c) => !seen.has(c.id))];
 }
 
 export async function updateCase(
@@ -253,12 +279,24 @@ const PROFILE_KEY = (contact: string) => `profile:${contact.toLowerCase()}`;
 export async function getProfile(contact: string | undefined): Promise<Profile | null> {
   if (!contact) return null;
   const raw = await (await driver()).get(PROFILE_KEY(contact));
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as Profile;
-  } catch {
-    return null;
+  let saved: Profile | null = null;
+  if (raw) {
+    try {
+      saved = JSON.parse(raw) as Profile;
+    } catch {
+      saved = null;
+    }
   }
+  const { DEMO_PROFILE, isDemoContact } = await import("@/data/demo-account");
+  // The demo account arrives with its details filled in. A saved profile
+  // overlays it field by field — saved values win, but blank saved fields
+  // never erase a seeded one, so the demo survives an accidental save.
+  if (!isDemoContact(contact)) return saved;
+  if (!saved) return DEMO_PROFILE;
+  const kept = Object.fromEntries(
+    Object.entries(saved).filter(([, v]) => v !== undefined && v !== ""),
+  );
+  return { ...DEMO_PROFILE, ...kept };
 }
 
 export async function putProfile(contact: string, profile: Profile): Promise<void> {

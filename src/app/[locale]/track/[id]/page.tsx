@@ -1,8 +1,9 @@
 import Link from "next/link";
 import PrintButton from "@/components/PrintButton";
 import { formatDate, getT, type Translate } from "@/i18n";
-import { authorityById, authorityName } from "@/lib/case";
+import { authorityById, authorityName, readCaseId } from "@/lib/case";
 import { getCase } from "@/lib/store";
+import { isDemoCaseId } from "@/data/demo-account";
 import {
   REPLY_DAYS,
   appealWindow,
@@ -152,20 +153,28 @@ export default async function TrackPage({
   const now = effectiveNow(file.clockOffsetDays);
   const clock = replyClock(file.filed.at, now, file.reply?.at);
   const appealWin = appealWindow(file.filed.at, now, file.reply?.at);
+  // Seeded demo records are read-only: no browser cookie filed them, so the
+  // demo controls (which act on the cookie-bound case) would silently no-op.
+  const seededReadOnly = isDemoCaseId(file.id) && (await readCaseId()) !== file.id;
 
   const elapsed = Math.min(Math.max(REPLY_DAYS - clock.daysLeft, 0), REPLY_DAYS);
   const percent = Math.round((elapsed / REPLY_DAYS) * 100);
 
   const statusKey = file.appeal
     ? "track.status.appealed"
-    : clock.state === "replied"
-      ? "track.status.replied"
-      : clock.state === "overdue"
-        ? "track.status.overdue"
-        : "track.status.waiting";
+    : file.deleted
+      ? "track.status.withdrawn"
+      : file.reply?.kind === "refused"
+        ? "track.status.refused"
+        : clock.state === "replied"
+          ? "track.status.replied"
+          : clock.state === "overdue"
+            ? "track.status.overdue"
+            : "track.status.waiting";
 
-  const tone =
-    clock.state === "overdue"
+  const tone = file.deleted
+    ? "info"
+    : file.reply?.kind === "refused" || clock.state === "overdue"
       ? "stop"
       : clock.state === "replied"
         ? "ok"
@@ -259,14 +268,34 @@ export default async function TrackPage({
                 {t(
                   file.reply.kind === "full"
                     ? "reply.full.subject"
-                    : "reply.partial.subject",
+                    : file.reply.kind === "refused"
+                      ? "reply.refused.subject"
+                      : "reply.partial.subject",
                 )}
               </p>
               <p>
                 {t(
-                  file.reply.kind === "full" ? "reply.full.text" : "reply.partial.text",
+                  file.reply.kind === "full"
+                    ? "reply.full.text"
+                    : file.reply.kind === "refused"
+                      ? "reply.refused.text"
+                      : "reply.partial.text",
                 )}
               </p>
+            </section>
+          )}
+
+          {file.deleted && (
+            <section className="callout callout-info" aria-labelledby="withdrawn-heading">
+              <h2 id="withdrawn-heading" className="callout-title">
+                {t("track.withdrawnTitle")}
+              </h2>
+              <p>
+                {t("track.withdrawnBody", {
+                  date: formatDate(file.deleted.at, locale),
+                })}
+              </p>
+              {file.deleted.note && <p className="small mb-0">{file.deleted.note}</p>}
             </section>
           )}
 
@@ -293,7 +322,8 @@ export default async function TrackPage({
               </p>
             </section>
           ) : (
-            appealWin.isOpen && (
+            appealWin.isOpen &&
+            !file.deleted && (
               <section className="callout callout-warn" aria-labelledby="can-appeal">
                 <h2 id="can-appeal" className="callout-title">
                   {t("track.appealTitle")}
@@ -318,13 +348,22 @@ export default async function TrackPage({
             )
           )}
 
-          <DemoControls
-            t={t}
-            locale={locale}
-            caseId={file.id}
-            offset={file.clockOffsetDays}
-            hasReply={Boolean(file.reply)}
-          />
+          {seededReadOnly ? (
+            <section className="callout callout-mock" aria-labelledby="seeded-heading">
+              <h2 id="seeded-heading" className="callout-title">
+                {t("demo.seededTitle")}
+              </h2>
+              <p className="small mb-0">{t("demo.seededBody")}</p>
+            </section>
+          ) : (
+            <DemoControls
+              t={t}
+              locale={locale}
+              caseId={file.id}
+              offset={file.clockOffsetDays}
+              hasReply={Boolean(file.reply)}
+            />
+          )}
 
           <div className="btn-row no-print">
             <PrintButton label={t("track.print")} />

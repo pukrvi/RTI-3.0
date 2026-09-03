@@ -333,7 +333,9 @@ export async function demoClock(form: FormData) {
 export async function demoReply(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const id = str(form, "caseId");
-  const kind = str(form, "kind") === "partial-refusal" ? "partial-refusal" : "full";
+  const rawKind = str(form, "kind");
+  const kind =
+    rawKind === "partial-refusal" || rawKind === "refused" ? rawKind : "full";
 
   const existing = await ownCase(id);
   if (!existing) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
@@ -539,6 +541,8 @@ export async function saveProfile(form: FormData) {
     return (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
   };
 
+  const bpl = pick("bpl", ["yes", "no"] as const);
+
   const profile: Profile = {
     ...((await getProfile(session.contact)) ?? {}),
     name: str(form, "name"),
@@ -555,10 +559,10 @@ export async function saveProfile(form: FormData) {
     habitation: pick("habitation", ["rural", "urban"] as const),
     education: pick("education", ["literate", "illiterate"] as const),
     citizenship: pick("citizenship", ["indian", "other"] as const),
-    bpl: pick("bpl", ["yes", "no"] as const),
-    bplCard: str(form, "bplCard"),
-    bplYear: str(form, "bplYear"),
-    bplAuthority: str(form, "bplAuthority"),
+    bpl,
+    bplCard: bpl === "yes" ? str(form, "bplCard") : "",
+    bplYear: bpl === "yes" ? str(form, "bplYear") : "",
+    bplAuthority: bpl === "yes" ? str(form, "bplAuthority") : "",
     updatedAt: new Date().toISOString(),
   };
 

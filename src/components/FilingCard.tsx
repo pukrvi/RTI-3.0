@@ -29,13 +29,17 @@ export default function FilingCard({
   showMeter?: boolean;
 }) {
   const { file, clock, authority } = item;
-  const badge = file.appeal
-    ? { cls: "badge-info", text: t("auth.account.appealed") }
-    : clock.state === "overdue"
-      ? { cls: "badge-stop", text: t("track.status.overdue") }
-      : clock.state === "replied"
-        ? { cls: "badge-ok", text: t("track.status.replied") }
-        : { cls: "badge-plain", text: t("track.status.waitingShort") };
+  const badge = file.deleted
+    ? { cls: "badge-plain", text: t("track.status.withdrawn") }
+    : file.appeal
+      ? { cls: "badge-info", text: t("auth.account.appealed") }
+      : file.reply?.kind === "refused"
+        ? { cls: "badge-stop", text: t("track.status.refused") }
+        : clock.state === "overdue"
+          ? { cls: "badge-stop", text: t("track.status.overdue") }
+          : clock.state === "replied"
+            ? { cls: "badge-ok", text: t("track.status.replied") }
+            : { cls: "badge-plain", text: t("track.status.waitingShort") };
 
   // Elapsed share of the thirty days, clamped. Purely decorative: the days and
   // the date are both written out beside it.

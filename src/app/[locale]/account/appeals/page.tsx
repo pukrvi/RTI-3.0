@@ -3,8 +3,6 @@ import { formatDate, getT } from "@/i18n";
 import { appealable, loadAccount } from "@/lib/account";
 import { currentSession } from "@/lib/session";
 
-const GROUNDS = ["no-response", "refused", "incomplete", "fee", "other"] as const;
-
 /**
  * File appeal.
  *
@@ -31,7 +29,6 @@ export default async function AppealsPage({
     <>
       <div>
         <h1 className="mb-0">{t("acct.appeals.h1")}</h1>
-        <p className="muted">{t("acct.appeals.lead")}</p>
       </div>
 
       <section className="section" aria-labelledby="ready">
@@ -43,7 +40,6 @@ export default async function AppealsPage({
           </div>
         ) : (
           <>
-            <p className="small muted">{t("acct.appeals.readyNote")}</p>
             <ul className="result-list">
               {ready.map((item) => (
                 <li className="card filing" key={item.file.id}>
@@ -108,15 +104,6 @@ export default async function AppealsPage({
           </ul>
         </section>
       )}
-
-      <section className="section" aria-labelledby="grounds">
-        <h2 id="grounds">{t("acct.appeals.grounds")}</h2>
-        <ul className="card step-list">
-          {GROUNDS.map((g) => (
-            <li key={g}>{t(`appeal.ground.${g}`)}</li>
-          ))}
-        </ul>
-      </section>
     </>
   );
 }

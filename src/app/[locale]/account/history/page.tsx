@@ -24,20 +24,23 @@ export default async function HistoryPage({
   const session = (await currentSession())!;
   const { items } = await loadAccount(session.contact, locale);
 
-  const status = (state: string, appealed: boolean) =>
-    appealed
+  const status = (item: (typeof items)[number]) =>
+    item.file.appeal
       ? t("auth.account.appealed")
-      : state === "replied"
-        ? t("track.status.replied")
-        : state === "overdue"
-          ? t("track.status.overdue")
-          : t("track.status.waiting");
+      : item.file.deleted
+        ? t("track.status.withdrawn")
+        : item.file.reply?.kind === "refused"
+          ? t("track.status.refused")
+          : item.clock.state === "replied"
+            ? t("track.status.replied")
+            : item.clock.state === "overdue"
+              ? t("track.status.overdue")
+              : t("track.status.waiting");
 
   return (
     <>
       <div>
         <h1 className="mb-0">{t("acct.history.h1")}</h1>
-        <p className="muted">{t("acct.history.lead")}</p>
       </div>
 
       {items.length === 0 ? (
@@ -85,15 +88,13 @@ export default async function HistoryPage({
                       {item.file.filed && formatDate(item.file.filed.at, locale)}
                     </time>
                   </td>
-                  <td>{status(item.clock.state, Boolean(item.file.appeal))}</td>
+                  <td>{status(item)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-
-      <p className="small muted">{t("acct.history.note")}</p>
     </>
   );
 }
