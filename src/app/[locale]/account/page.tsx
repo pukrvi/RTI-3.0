@@ -1,8 +1,8 @@
 import Link from "next/link";
 import FilingCard from "@/components/FilingCard";
 import Icon from "@/components/Icon";
-import { formatDate, getT } from "@/i18n";
-import { loadAccount, type AccountItem } from "@/lib/account";
+import { getT } from "@/i18n";
+import { loadAccount } from "@/lib/account";
 import { currentCase } from "@/lib/case";
 import { currentSession } from "@/lib/session";
 import { getProfile } from "@/lib/store";
@@ -13,8 +13,13 @@ import { getProfile } from "@/lib/store";
  * The live portal's version is six numbers in a 2×3 grid and nothing else — no
  * dates, no ordering, no marker on the filing that is two days from breaching
  * thirty. The six numbers are here, because people who have used the portal
- * look for them, but they are the third thing on the page. The first is the
- * only question a dashboard should answer: is anything waiting on me?
+ * look for them, but they sit below the two lists that matter: the most
+ * recent filings first, then anything waiting on the citizen.
+ *
+ * Every list on this page speaks the track card's language, shows the two
+ * most recent filings, and then stops: a view link in the heading leads to
+ * the full list. Nothing here carries an action of its own — the way in is
+ * always the card, and the appeal or reply it opens.
  */
 export default async function DashboardPage({
   params,
@@ -33,15 +38,6 @@ export default async function DashboardPage({
 
   const attention = items.filter((i) => i.needsAction);
   const showDraft = draft && !draft.filed && draft.question;
-
-  const reason = (item: AccountItem) =>
-    item.clock.state === "replied"
-      ? t("acct.dash.reason.replied")
-      : item.clock.state === "overdue"
-        ? t("acct.dash.reason.overdue")
-        : t("acct.dash.reason.window", {
-            date: formatDate(item.window.closes ?? item.clock.deadline, locale),
-          });
 
   const countCard = (
     heading: string,
@@ -84,8 +80,48 @@ export default async function DashboardPage({
         </div>
       )}
 
+      <section className="section" aria-labelledby="recent">
+        <div className="card-head">
+          <h2 id="recent">{t("acct.dash.recent")}</h2>
+          {items.length > 0 && (
+            <Link className="small" href={`/${locale}/account/history`}>
+              {t("acct.dash.viewAll")}
+            </Link>
+          )}
+        </div>
+        {items.length === 0 ? (
+          <div className="card">
+            <p>{t("auth.account.empty")}</p>
+            <p className="mb-0">
+              <Link className="btn" href={`/${locale}/account/new`}>
+                {t("auth.account.start")}
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <ul className="card-grid">
+            {items.slice(0, 2).map((item) => (
+              <FilingCard
+                key={item.file.id}
+                item={item}
+                locale={locale}
+                t={t}
+                showMeter
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="section" aria-labelledby="attention">
-        <h2 id="attention">{t("acct.dash.attention")}</h2>
+        <div className="card-head">
+          <h2 id="attention">{t("acct.dash.attention")}</h2>
+          {attention.length > 0 && (
+            <Link className="small" href={`/${locale}/account/track`}>
+              {t("acct.dash.viewRequests")}
+            </Link>
+          )}
+        </div>
         {attention.length === 0 ? (
           <div className="callout callout-ok">
             <p className="callout-title">
@@ -94,37 +130,15 @@ export default async function DashboardPage({
             </p>
           </div>
         ) : (
-          <ul className="result-list">
-            {attention.map((item) => (
-              <li className="card filing filing-hot" key={item.file.id}>
-                <div className="card-head">
-                  <h3 className="mb-0 refno">{item.file.filed?.ref}</h3>
-                  <span
-                    className={`badge ${item.clock.state === "overdue" ? "badge-stop" : "badge-warn"}`}
-                  >
-                    {item.clock.state === "replied"
-                      ? t("track.status.replied")
-                      : t("track.status.overdue")}
-                  </span>
-                </div>
-                <p className="mb-0" lang={locale}>
-                  {item.file.subject}
-                </p>
-                <p className="small">{reason(item)}</p>
-                <p className="btn-row mb-0">
-                  <Link className="btn btn-sm" href={`/${locale}/track/${item.file.id}`}>
-                    {t("auth.account.open")}
-                  </Link>
-                  {item.window.isOpen && !item.file.appeal && (
-                    <Link
-                      className="btn btn-secondary btn-sm"
-                      href={`/${locale}/appeal/${item.file.id}`}
-                    >
-                      {t("track.appealStart")}
-                    </Link>
-                  )}
-                </p>
-              </li>
+          <ul className="card-grid">
+            {attention.slice(0, 2).map((item) => (
+              <FilingCard
+                key={item.file.id}
+                item={item}
+                locale={locale}
+                t={t}
+                showMeter
+              />
             ))}
           </ul>
         )}
@@ -152,33 +166,6 @@ export default async function DashboardPage({
             </Link>
           </p>
         </div>
-      </section>
-
-      <section className="section" aria-labelledby="recent">
-        <div className="card-head">
-          <h2 id="recent">{t("acct.dash.recent")}</h2>
-          {items.length > 0 && (
-            <Link className="small" href={`/${locale}/account/history`}>
-              {t("acct.dash.viewAll")}
-            </Link>
-          )}
-        </div>
-        {items.length === 0 ? (
-          <div className="card">
-            <p>{t("auth.account.empty")}</p>
-            <p className="mb-0">
-              <Link className="btn" href={`/${locale}/account/new`}>
-                {t("auth.account.start")}
-              </Link>
-            </p>
-          </div>
-        ) : (
-          <ul className="result-list">
-            {items.slice(0, 3).map((item) => (
-              <FilingCard key={item.file.id} item={item} locale={locale} t={t} />
-            ))}
-          </ul>
-        )}
       </section>
     </>
   );

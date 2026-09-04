@@ -45,7 +45,7 @@ export default async function TrackStatusPage({
             <p className="mb-0">{t("acct.track.none")}</p>
           </div>
         ) : (
-          <ul className="result-list">
+          <ul className="card-grid">
             {open.map((item) => (
               <FilingCard key={item.file.id} item={item} locale={locale} t={t} showMeter />
             ))}
@@ -56,9 +56,9 @@ export default async function TrackStatusPage({
       {closed.length > 0 && (
         <section className="section" aria-labelledby="closed">
           <h2 id="closed">{t("acct.track.closed")}</h2>
-          <ul className="result-list">
+          <ul className="card-grid">
             {closed.map((item) => (
-              <FilingCard key={item.file.id} item={item} locale={locale} t={t} />
+              <FilingCard key={item.file.id} item={item} locale={locale} t={t} showMeter />
             ))}
           </ul>
         </section>
@@ -75,24 +75,26 @@ export default async function TrackStatusPage({
 
         <form className="card" action={lookupByRef}>
           <input type="hidden" name="locale" value={locale} />
-          <div className="field">
+          <div className="field mb-0">
             <label htmlFor="ref">{t("trackIndex.lookupLabel")}</label>
             <span className="hint" id="ref-hint">
               {t("trackIndex.lookupHint")}
             </span>
-            <input
-              type="text"
-              id="ref"
-              name="ref"
-              required
-              aria-describedby="ref-hint"
-              autoComplete="off"
-              spellCheck={false}
-            />
+            <div className="lookup-row">
+              <input
+                type="text"
+                id="ref"
+                name="ref"
+                required
+                aria-describedby="ref-hint"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button type="submit" className="btn btn-secondary">
+                {t("trackIndex.lookup")}
+              </button>
+            </div>
           </div>
-          <button type="submit" className="btn btn-secondary">
-            {t("trackIndex.lookup")}
-          </button>
         </form>
       </section>
     </>

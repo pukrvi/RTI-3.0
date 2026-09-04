@@ -32,19 +32,21 @@ test("demo account shows eight seeded requests in every state", async ({
   await expect(page.getByRole("heading", { name: "Waiting for a reply" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Answered or appealed" })).toBeVisible();
 
-  // History: one row per request, carrying the withdrawn, refused and
-  // appealed states alongside the ordinary ones.
+  // History: one row per request, carrying the refused and appealed states
+  // alongside the ordinary ones.
   await page.getByRole("link", { name: "View history" }).click();
   await expect(page.getByRole("row")).toHaveCount(9); // header + 8
-  await expect(page.getByText("Withdrawn by the applicant")).toBeVisible();
-  await expect(page.getByText("Refused under section 8")).toBeVisible();
+  await expect(page.getByText(/disposed of by the department/)).toBeVisible();
+  await expect(page.getByText("Refused under Sec 8")).toBeVisible();
   await expect(page.getByText("Appeal filed").first()).toBeVisible();
 
   // Appeals: two ready (overdue silence, recent refusal), one already filed.
+  // Each ready card is itself the way into the appeal form.
   await page.getByRole("link", { name: "File appeal" }).click();
   await expect(
-    page.getByRole("link", { name: "Prepare this appeal" }),
+    page.locator('ul.card-grid a[href*="/appeal/demo-"]'),
   ).toHaveCount(2);
+  await expect(page.getByText(/Window closes/).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Appeals you have filed" })).toBeVisible();
 
   // Payments: eight request fees plus one free appeal.
@@ -88,11 +90,12 @@ test("demo seeds resolve by registration number and open read-only", async ({
   await page.waitForURL(/\/en\/track\/demo-/);
   await expect(page.getByText("Seeded demo record")).toBeVisible();
 
-  // The refused seed shows its refusal; the withdrawn seed shows its note.
+  // The refused seed shows its refusal; the long-answered dopt seed shows
+  // its supplied reply.
   await page.goto("/en/track/demo-r6-cbdt");
   await expect(page.getByText("Information refused")).toBeVisible();
   await page.goto("/en/track/demo-r8-dopt");
-  await expect(page.getByText("Withdrawn by the applicant").first()).toBeVisible();
+  await expect(page.getByText("Information supplied")).toBeVisible();
 
   expect(problems, problems.join("\n")).toEqual([]);
 });

@@ -39,7 +39,7 @@ flowchart TD
 
 ### 1. Ask before you file — an AI assistant
 
-**RTI Sahayak** is a chat on the first step: describe what you want to know in any Indian
+**RTI Mitra** is a chat on the first step: describe what you want to know in any Indian
 language, and it suggests the right authority and a sharper way to ask. Three constraints,
 all enforced in code:
 

@@ -231,9 +231,9 @@ const SEEDS: Seed[] = [
       "The CPIO supplied the toll collection figures but refused the concessionaire correspondence under section 8(1)(d). The correspondence concerns the revision of toll rates charged to the public, and larger public interest warrants its disclosure. I request the First Appellate Authority to examine the refusal and direct the CPIO to supply the remaining information.",
   },
   {
-    // Withdrawn by the applicant: filed, then the citizen found the published
-    // RTI annual report and withdrew instead of waiting. Shows the withdrawn
-    // state in history and track; excluded from pending counts and appeals.
+    // Answered in full, long settled: filed 90 days ago, replied 65 days ago,
+    // so the 30-day appeal window has closed. Read-only history. There is no
+    // withdrawal in this product, so no seed exercises a withdrawn state.
     id: "demo-r8-dopt",
     authorityId: "dopt",
     question: "How many RTI applications did the department receive and dispose of last year?",
@@ -244,9 +244,9 @@ const SEEDS: Seed[] = [
       "3. If any part of this information is held by another public authority, please transfer that part under section 6(3) of the RTI Act, 2005 and inform me of the transfer.",
       "4. Please supply the information in electronic form to the email address given above.",
     ].join("\n\n"),
-    filedDaysAgo: 20,
-    deletedDaysAgo: 5,
-    deletedNote: "Withdrawn by the applicant — the published RTI annual report answered the question.",
+    filedDaysAgo: 90,
+    repliedDaysAgo: 65,
+    replyKind: "full",
   },
 ];
 

@@ -15,7 +15,7 @@ import { confirmAndProceed, draftLetter, submitFiling } from "../actions";
  * The whole application, on one page.
  *
  * The live portal spreads twelve fields and four screens of scrolling across a
- * seven-step bar that always starts at RTI Sahayak, whether you wanted it or
+ * seven-step bar that always starts at RTI Mitra, whether you wanted it or
  * not. Here there are two doors — this form, and the assistant — and behind
  * both of them the same single page. Who holds the information, whether it is
  * already published and whether the subject is even Central are still checked

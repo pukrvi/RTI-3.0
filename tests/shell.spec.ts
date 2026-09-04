@@ -184,7 +184,7 @@ test("the assistant opens on a disclosure screen, then runs full screen", async 
 
   // It says what it does before you start.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello,");
-  await expect(page.getByText(/RTI Sahayak reads your question/)).toBeVisible();
+  await expect(page.getByText(/RTI Mitra reads your question/)).toBeVisible();
 
   const begin = page.getByRole("link", { name: "Begin" });
   await expect(begin).toBeVisible();
