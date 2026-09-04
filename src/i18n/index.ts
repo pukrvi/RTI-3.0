@@ -116,3 +116,30 @@ export function formatDate(iso: string, locale: string): string {
     timeZone: "Asia/Kolkata",
   }).format(new Date(iso));
 }
+
+/**
+ * Short date for dense card footers: "27 Sep 2026". English months are always
+ * three letters — en-IN would render "Sept" — while other languages use their
+ * own short form ("27 सित॰ 2026").
+ */
+export function formatDateShort(iso: string, locale: string): string {
+  if (locale === "en") {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      })
+        .formatToParts(new Date(iso))
+        .map((p) => [p.type, p.value]),
+    );
+    return `${parts.day} ${parts.month} ${parts.year}`;
+  }
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  }).format(new Date(iso));
+}

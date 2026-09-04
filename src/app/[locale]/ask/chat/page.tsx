@@ -8,7 +8,7 @@ import { matchPublished, matchReplies, verdict } from "@/lib/match";
 import { askAssistant, continueToRouting, restart } from "../../actions";
 
 /**
- * RTI Sahayak.
+ * RTI Mitra.
  *
  * Full screen, no site header or footer, its own bar and its own way out. It
  * does the job FOIA.gov's wizard does — work out which body holds what you are

@@ -153,17 +153,20 @@ test("history, tracking and appeals are one account, not four lookups", async ({
 
   // Push the demo clock past thirty days and the appeal offers itself, with
   // the closing date on it — neither of which the live portal ever tells you.
+  // The card itself is the way in — there is no Open button.
   await page.goto("/en/account/track");
-  await page.getByRole("link", { name: "Open" }).first().click();
+  await page.getByRole("link", { name: /MGNREGA wage payments/ }).first().click();
   await page.waitForURL(/\/en\/track\//);
   await page.getByRole("button", { name: "Jump past the deadline" }).click();
   await expect(page.getByText(/Clock moved forward 31 days/)).toBeVisible();
   await page.goto("/en/account/appeals");
-  await expect(page.getByRole("button", { name: "Prepare this appeal" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Prepare this appeal" })).toBeVisible();
-  await expect(page.getByText(/Closes .* days left/)).toBeVisible();
+  await expect(page.locator('ul.card-grid a[href*="/appeal/"]')).toHaveCount(1);
+  await expect(page.getByText(/Window closes/)).toBeVisible();
+  await expect(page.getByText(/\d+ days left/)).toBeVisible();
 
   // The dashboard leads with it rather than burying it in six counts.
   await page.goto("/en/account");
-  await expect(page.getByText(/Thirty days have passed with no reply/)).toBeVisible();
+  await expect(
+    page.getByLabel("Needs your attention").getByText(/days overdue/),
+  ).toBeVisible();
 });

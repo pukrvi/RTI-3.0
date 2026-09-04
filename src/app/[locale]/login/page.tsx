@@ -129,7 +129,7 @@ export default async function LoginPage({
 
             <p className="create-line muted mb-0">
               {t("auth.login.newHere")}{" "}
-              <Link href={`/${locale}/login`}>{t("auth.login.createAccount")}</Link>
+              <Link href={`/${locale}/signup`}>{t("auth.login.createAccount")}</Link>
             </p>
           </div>
 

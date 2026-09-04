@@ -132,7 +132,7 @@ export async function useBetterQuestion(form: FormData) {
 }
 
 /**
- * The way out of RTI Sahayak into the filing form.
+ * The way out of RTI Mitra into the filing form.
  *
  * Everything the conversation learned travels with the citizen: the question,
  * and — when the routing was certain — the authority, which arrives on the form
@@ -575,4 +575,148 @@ export async function signOutAction(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   await signOut();
   redirect(`/${locale}`);
+}
+
+/* ------------------------------------------------------------ sign-up ----
+ * Account creation, simulated end to end like the login flow. Two ways in:
+ *
+ *   email:   name + email + captcha → OTP (any 6 digits) → one-time Aadhaar
+ *            citizenship check (any 12 digits) → profile details → account.
+ *   aadhaar: Aadhaar number + consent (any 12 digits) → profile details
+ *            prefilled from the simulated fetched identity → account.
+ *
+ * Nothing is sent, verified or stored beyond the 15-minute pending cookie
+ * and, at the final step, the same profile + session the login flow writes.
+ * ------------------------------------------------------------------------ */
+
+function digitsOnly(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+export async function startEmailSignup(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const name = str(form, "name");
+  const email = str(form, "email");
+  if (!name || !email || !email.includes("@")) {
+    redirect(`/${locale}/signup?error=details`);
+  }
+  const { setSignup } = await import("@/lib/signup");
+  await setSignup({ method: "email", step: "code", name, email });
+  redirect(`/${locale}/signup/code`);
+}
+
+export async function verifySignupCode(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const code = str(form, "code").replace(/\s/g, "");
+  const { getSignup, setSignup } = await import("@/lib/signup");
+  const pending = await getSignup();
+  if (!pending || pending.method !== "email") redirect(`/${locale}/signup`);
+  if (!/^\d{6}$/.test(code)) redirect(`/${locale}/signup/code?error=code`);
+  await setSignup({ ...pending, step: "verify" });
+  redirect(`/${locale}/signup/verify`);
+}
+
+export async function startAadhaarSignup(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const { setSignup } = await import("@/lib/signup");
+  await setSignup({ method: "aadhaar", step: "aadhaar" });
+  redirect(`/${locale}/signup/aadhaar`);
+}
+
+/**
+ * The mandatory one-time citizenship check on the email path. Any 12 digits
+ * verify — the number itself is never stored, only its last 4 for display.
+ */
+export async function verifySignupAadhaar(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const digits = digitsOnly(str(form, "aadhaar"));
+  const { getSignup, setSignup } = await import("@/lib/signup");
+  const pending = await getSignup();
+  if (!pending || pending.method !== "email") redirect(`/${locale}/signup`);
+  if (!/^\d{12}$/.test(digits)) redirect(`/${locale}/signup/verify?error=aadhaar`);
+  if (!str(form, "consent")) redirect(`/${locale}/signup/verify?error=consent`);
+  await setSignup({
+    ...pending,
+    step: "details",
+    aadhaarVerified: true,
+    aadhaarLast4: digits.slice(-4),
+  });
+  redirect(`/${locale}/signup/details`);
+}
+
+/**
+ * The Aadhaar way in: the handoff itself is the verification, so a valid
+ * number lands straight on the details step with the fetched identity.
+ */
+export async function fetchAadhaarIdentity(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const digits = digitsOnly(str(form, "aadhaar"));
+  const { getSignup, setSignup } = await import("@/lib/signup");
+  const pending = await getSignup();
+  if (!pending || pending.method !== "aadhaar") redirect(`/${locale}/signup`);
+  if (!/^\d{12}$/.test(digits)) redirect(`/${locale}/signup/aadhaar?error=aadhaar`);
+  if (!str(form, "consent")) redirect(`/${locale}/signup/aadhaar?error=consent`);
+  await setSignup({
+    ...pending,
+    step: "details",
+    aadhaarVerified: true,
+    aadhaarLast4: digits.slice(-4),
+  });
+  redirect(`/${locale}/signup/details`);
+}
+
+/**
+ * Final step, shared by both paths: the same fields as account information,
+ * saved once, then the account is signed in exactly as a login would.
+ */
+export async function completeSignup(form: FormData) {
+  const locale = normaliseLocale(str(form, "locale"));
+  const { getSignup, clearSignup } = await import("@/lib/signup");
+  const pending = await getSignup();
+  if (!pending || pending.step !== "details" || !pending.aadhaarVerified) {
+    redirect(`/${locale}/signup`);
+  }
+
+  const pick = <T extends string>(key: string, allowed: readonly T[]): T | undefined => {
+    const value = str(form, key);
+    return (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
+  };
+  const bpl = pick("bpl", ["yes", "no"] as const);
+  const contact = pending.method === "email" ? (pending.email ?? str(form, "email")) : str(form, "email");
+
+  const profile: Profile = {
+    name: str(form, "name") || pending.name,
+    email: str(form, "email") || pending.email,
+    mobile: str(form, "mobile"),
+    phone: str(form, "phone"),
+    gender: pick("gender", ["male", "female", "third"] as const),
+    addr1: str(form, "addr1"),
+    addr2: str(form, "addr2"),
+    addr3: str(form, "addr3"),
+    pin: str(form, "pin"),
+    country: pick("country", ["india", "other"] as const) ?? "india",
+    state: str(form, "state"),
+    habitation: pick("habitation", ["rural", "urban"] as const),
+    education: pick("education", ["literate", "illiterate"] as const),
+    // Citizenship was verified via Aadhaar on both paths, so it arrives
+    // locked to Indian rather than asked again.
+    citizenship: "indian",
+    bpl,
+    bplCard: bpl === "yes" ? str(form, "bplCard") : "",
+    bplYear: bpl === "yes" ? str(form, "bplYear") : "",
+    bplAuthority: bpl === "yes" ? str(form, "bplAuthority") : "",
+    updatedAt: new Date().toISOString(),
+  };
+
+  await putProfile(contact || pending.email || pending.name || "signup", profile);
+  await signIn({ contact: contact || profile.email || "signup", method: "email" });
+  await clearSignup();
+
+  const draft = await requireCase();
+  if (draft?.filed) {
+    await updateCase(draft.id, { owner: contact });
+    if (contact) await addToAccount(contact, draft.id);
+  }
+
+  redirect(`/${locale}/account`);
 }

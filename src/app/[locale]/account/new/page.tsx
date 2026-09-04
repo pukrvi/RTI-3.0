@@ -6,11 +6,17 @@ import { currentCase } from "@/lib/case";
 /**
  * The front door to filing, from inside the account.
  *
- * Four ways in, ranked: filing first and biggest, the three "check first"
- * routes smaller beneath it. One primary button on the page — everything else
- * is secondary. The state-scope warning survives as one compact line, because
- * the wrong-portal problem is real, but three sentences of it buried the
- * buttons it was protecting.
+ * Four whole-card links, ranked: filing first and full-width, the three
+ * "check first" routes beneath it in the site's standard three-up grid. There
+ * is exactly one primary card on the page and no buttons at all — each card
+ * is its own link, with the icon beside a title and a one-line body, after
+ * the Paper "Home 1c" pattern. The card titles and bodies reuse the existing
+ * dictionary strings, so no new English/Hindi/Bengali copy was needed: the
+ * Mitra card's body ("finds what is already published and names the
+ * authority that holds the rest") plus the scope note below it carry the
+ * check-first and Central-only meaning. The state-scope warning survives as
+ * one compact line, because the wrong-portal problem is real, but three
+ * sentences of it buried the cards it was protecting.
  */
 export default async function NewRequestPage({
   params,
@@ -38,51 +44,46 @@ export default async function NewRequestPage({
         </div>
       )}
 
-      <section className="card new-file-card">
-        <p className="new-file-lead">{t("acct.new.fileBody")}</p>
-        <p className="mb-0">
-          <Link className="btn" href={`/${locale}/file`}>
-            {t("acct.new.fileCta")}
-          </Link>
-        </p>
-      </section>
+      <Link className="action-card action-card-primary" href={`/${locale}/file`}>
+        <span className="action-ic" aria-hidden="true">
+          <Icon name="plus" />
+        </span>
+        <span className="action-tx">
+          <span className="action-t">{t("acct.new.fileCta")}</span>
+          <span className="action-d">{t("acct.new.fileBody")}</span>
+        </span>
+      </Link>
 
       <div className="card-grid card-grid-3">
-        <section className="card mini-card">
-          <h2 className="card-title">
+        <Link className="action-card" href={`/${locale}/ask`}>
+          <span className="action-ic" aria-hidden="true">
             <Icon name="search" />
-            {t("acct.new.searchTitle")}
-          </h2>
-          <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/ask`}>
-              {t("acct.new.searchCta")}
-            </Link>
-          </p>
-        </section>
+          </span>
+          <span className="action-tx">
+            <span className="action-t">{t("acct.new.searchTitle")}</span>
+            <span className="action-d">{t("acct.new.searchBody")}</span>
+          </span>
+        </Link>
 
-        <section className="card mini-card">
-          <h2 className="card-title">
-            <Icon name="archive" />
-            {t("acct.new.pubTitle")}
-          </h2>
-          <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/published`}>
-              {t("acct.new.pubCta")}
-            </Link>
-          </p>
-        </section>
-
-        <section className="card mini-card">
-          <h2 className="card-title">
+        <Link className="action-card" href={`/${locale}/authorities`}>
+          <span className="action-ic" aria-hidden="true">
             <Icon name="building" />
-            {t("acct.new.dirTitle")}
-          </h2>
-          <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/authorities`}>
-              {t("acct.new.dirCta")}
-            </Link>
-          </p>
-        </section>
+          </span>
+          <span className="action-tx">
+            <span className="action-t">{t("acct.new.dirTitle")}</span>
+            <span className="action-d">{t("acct.new.dirBody")}</span>
+          </span>
+        </Link>
+
+        <Link className="action-card" href={`/${locale}/published`}>
+          <span className="action-ic" aria-hidden="true">
+            <Icon name="archive" />
+          </span>
+          <span className="action-tx">
+            <span className="action-t">{t("acct.new.pubTitle")}</span>
+            <span className="action-d">{t("acct.new.pubBody")}</span>
+          </span>
+        </Link>
       </div>
 
       <div className="callout callout-warn callout-compact">
