@@ -11,8 +11,26 @@ export async function beginRequest(
   locale = "en",
   { fresh = false }: { fresh?: boolean } = {},
 ) {
-  // The assistant opens on a disclosure screen; the conversation is behind it.
-  await page.goto(`/${locale}/ask/chat`);
+  // The assistant is the chat itself; there is no intro page in front of it.
+  await page.goto(`/${locale}/chat`);
+
+  // First visit shows the intro pop-up over the chat, covering the composer
+  // until it is dismissed — dismiss it the way a citizen would. Returning
+  // visits have nothing to dismiss, and with scripting disabled the client
+  // shell never runs so the pop-up never appears; a short wait covers both
+  // without slowing the suite, and also covers hydration arriving late.
+  const intro = page.getByRole("dialog");
+  try {
+    await intro.waitFor({ state: "visible", timeout: 2500 });
+  } catch {
+    /* nothing to dismiss */
+  }
+  if (await intro.count()) {
+    await intro
+      .getByRole("button", { name: locale === "hi" ? "शुरू कीजिए" : "Begin" })
+      .click();
+    await expect(intro).toHaveCount(0);
+  }
 
   if (fresh) {
     const again = page.getByRole("button", {

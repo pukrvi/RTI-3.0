@@ -55,7 +55,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   rupee: (
     <>
-      <path d="M7 4h10M7 8.5h10M7 4c5 0 6.5 1.5 6.5 4S12 12.5 7 12.5h2L16 20" />
+      <circle cx="12" cy="12" r="8.5" />
+      <g transform="translate(12 12) scale(0.62) translate(-12 -12)">
+        <path
+          d="M7 4h10M7 8.5h10M7 4c5 0 6.5 1.5 6.5 4S12 12.5 7 12.5h2L16 20"
+          strokeWidth="2.4"
+        />
+      </g>
     </>
   ),
   "no-reason": (

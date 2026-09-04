@@ -37,7 +37,7 @@ export default async function NewRequestPage({
           <p className="callout-title">{t("acct.new.draftTitle")}</p>
           <p lang={locale}>“{draft!.question}”</p>
           <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/ask/chat`}>
+            <Link className="btn btn-secondary btn-sm" href={`/${locale}/chat`}>
               {t("acct.new.resume")}
             </Link>
           </p>
@@ -55,7 +55,7 @@ export default async function NewRequestPage({
       </Link>
 
       <div className="card-grid card-grid-3">
-        <Link className="action-card" href={`/${locale}/ask`}>
+        <Link className="action-card" href={`/${locale}/chat`}>
           <span className="action-ic" aria-hidden="true">
             <Icon name="search" />
           </span>

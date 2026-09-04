@@ -19,7 +19,7 @@ export default async function ContactPage({
   return (
     <main id="main">
       <div className="page narrow stack-lg">
-        <div>
+        <div className="page-head">
           <h1>{t("contact.h1")}</h1>
           <p className="lead muted">{t("contact.lead")}</p>
         </div>

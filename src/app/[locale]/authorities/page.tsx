@@ -56,7 +56,7 @@ export default async function AuthoritiesPage({
             ))}
           </ul>
           <p>
-            <Link className="btn" href={`/${locale}/ask`}>
+            <Link className="btn" href={`/${locale}/chat`}>
               {t("authorities.fileWith")}
             </Link>
           </p>

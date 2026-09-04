@@ -3,16 +3,14 @@ import Icon from "@/components/Icon";
 import HeroCarousel from "@/components/HeroCarousel";
 import HowCards from "@/components/HowCards";
 import { formatDate, getT } from "@/i18n";
-import { INDICATORS, INDICATORS_AS_OF } from "@/data/indicators";
-
-const RTI_ACT_URL = "https://rti.dopt.gov.in/rtiact.html";
+import { INDICATORS } from "@/data/indicators";
 
 /**
  * The homepage.
  *
- * A three-panel gallery at the top — what you can do, how the service is
- * doing, and what the Act gives you — then how to file, what cannot be filed
- * here, and the usual questions and notices.
+ * A four-panel gallery at the top — what you can do, the RTI Mitra assistant,
+ * how the service is doing, and what the Act gives you — then how to file,
+ * what cannot be filed here, and the usual questions and notices.
  *
  * The gallery is a scroll-snap strip with anchor links, so it works with no
  * JavaScript, it never moves on its own, and it can be scrolled from the
@@ -26,7 +24,7 @@ export default async function HomePage({
   const { locale } = await params;
   const t = getT(locale);
 
-  const slides = [t("hero.s1"), t("hero.s2"), t("hero.s3")];
+  const slides = [t("hero.s1"), t("hero.mitra"), t("hero.s2"), t("hero.s3")];
   const rights = [
     { icon: "clock" as const, v: "home.rights.daysValue", l: "home.rights.daysLabel", n: "home.rights.daysNote" },
     { icon: "rupee" as const, v: "home.rights.appealValue", l: "home.rights.appealLabel", n: "home.rights.appealNote" },
@@ -45,20 +43,23 @@ export default async function HomePage({
         aria-label={t("hero.label")}
       >
         <div className="slides" tabIndex={0} role="group" aria-label={t("hero.label")}>
-          {[1, 2, 3].map((n) => (
+          {slides.map((_, i) => {
+            const n = i + 1;
+            const total = slides.length;
+            return (
             <div
               className="slide"
               id={`slide-${n}`}
               key={n}
               role="group"
               aria-roledescription="slide"
-              aria-label={t("hero.slide", { n, total: 3 })}
+              aria-label={t("hero.slide", { n, total })}
             >
-              <a className="slide-arrow prev" href={`#slide-${n === 1 ? 3 : n - 1}`}>
+              <a className="slide-arrow prev" href={`#slide-${n === 1 ? total : n - 1}`}>
                 <span aria-hidden="true">‹</span>
                 <span className="visually-hidden">{t("hero.prev")}</span>
               </a>
-              <a className="slide-arrow next" href={`#slide-${n === 3 ? 1 : n + 1}`}>
+              <a className="slide-arrow next" href={`#slide-${n === total ? 1 : n + 1}`}>
                 <span aria-hidden="true">›</span>
                 <span className="visually-hidden">{t("hero.next")}</span>
               </a>
@@ -73,59 +74,61 @@ export default async function HomePage({
                         <Icon name="act" />
                         {t("nav.file")}
                       </Link>
-                      <Link className="btn btn-secondary" href={`/${locale}/ask`}>
-                        <Icon name="search" />
-                        {t("hero.searchRecords")}
-                      </Link>
                       <Link className="btn btn-secondary" href={`/${locale}/appeal`}>
                         <Icon name="appeal" />
                         {t("hero.fileAppeal")}
                       </Link>
-                      <a
-                        className="btn btn-secondary"
-                        href={RTI_ACT_URL}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <Icon name="act" />
-                        {t("hero.readAct")}
-                      </a>
                     </div>
                   </>
                 )}
 
                 {n === 2 && (
                   <>
-                    <h2>{t("ind.title")}</h2>
+                    <h1>{t("hero.mitraTitle")}</h1>
+                    <p className="lead">
+                      {t("hero.mitraLead")}
+                      <br />
+                      {t("hero.mitraLead2")}
+                    </p>
                     <div className="ind-grid">
-                      {INDICATORS.map((ind) => (
-                        <div className="ind" key={ind.labelKey}>
-                          <span className="v">{ind.value}</span>
-                          <span className="l">{t(ind.labelKey)}</span>
-                          <span className="d">
-                            {ind.asOfKey === "ind.asOfDate"
-                              ? t("ind.asOfDate", {
-                                  date: formatDate(INDICATORS_AS_OF, locale),
-                                })
-                              : t(ind.asOfKey)}
+                      {(["search", "building", "check"] as const).map((icon, i) => (
+                        <div className="ind ind-mitra" key={icon}>
+                          <span className="v">
+                            <Icon name={icon} /> {t(`hero.mitra${i + 1}`)}
                           </span>
                         </div>
                       ))}
+                    </div>
+                    <div className="hero-actions">
+                      <Link className="btn" href={`/${locale}/chat`}>
+                        <Icon name="chat" />
+                        {t("acct.new.searchCta")}
+                      </Link>
                     </div>
                   </>
                 )}
 
                 {n === 3 && (
                   <>
-                    <h2>{t("hp.rights")}</h2>
-                    <p className="lead">{t("hp.stepsLead")}</p>
+                    <h1>{t("ind.title")}</h1>
+                    <div className="ind-grid">
+                      {INDICATORS.map((ind) => (
+                        <div className="ind" key={ind.labelKey}>
+                          <span className="v">{ind.value}</span>
+                          <span className="l">{t(ind.labelKey)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {n === 4 && (
+                  <>
+                    <h1>{t("hp.rights")}</h1>
                     <div className="stat-grid">
                       {rights.map((r) => (
-                        <div className="stat" key={r.v}>
-                          <span className="value">
-                            <Icon name={r.icon} /> {t(r.v)}
-                          </span>
-                          <span className="label">{t(r.l)}</span>
+                        <div className="stat stat-rights" key={r.v}>
+                          <span className="value">{t(r.v)}</span>
                           <span className="note">{t(r.n)}</span>
                         </div>
                       ))}
@@ -134,7 +137,8 @@ export default async function HomePage({
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <nav className="dots" aria-label={t("hero.label")}>
@@ -184,11 +188,10 @@ export default async function HomePage({
           <h2 id="hp-rights">{t("hp.rights")}</h2>
           <div className="stat-grid">
             {rights.map((r) => (
-              <div className="stat" key={`body-${r.v}`}>
+              <div className="stat stat-rights" key={`body-${r.v}`}>
                 <span className="value">
                   <Icon name={r.icon} /> {t(r.v)}
                 </span>
-                <span className="label">{t(r.l)}</span>
                 <span className="note">{t(r.n)}</span>
               </div>
             ))}

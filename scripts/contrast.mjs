@@ -90,9 +90,10 @@ const PAIRS = [
   ["stop-line", "surface", 3, "stop meter fill, error field border"],
   ["mock-line", "mock-bg", 3, "mock callout border"],
   ["brand-tint", "brand-soft", 1, "info-callout hairline (decorative, brand carries the edge)"],
-  // The focus indicator is a dark outline wrapped in a bright halo. On a light
-  // background the outline carries the contrast; on a dark control the halo does.
-  // Both rings always contrast with each other, so one of them is always visible.
+  // The focus indicator is a brand-blue outline wrapped in a pale-blue halo.
+  // On a light background the outline carries the contrast; on a dark control
+  // the halo does. Both rings always contrast with each other, so one of them
+  // is always visible.
   ["focus", "surface", 3, "focus outline on a light background"],
   ["focus", "bg", 3, "focus outline on the page background"],
   ["focus-halo", "brand", 3, "focus halo on a primary button"],

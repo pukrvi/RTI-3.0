@@ -238,7 +238,7 @@ export default async function FilePage({
               </p>
             )}
             <p className="small mb-0">
-              <Link href={`/${locale}/ask`}>{t("file.askInstead")}</Link>
+              <Link href={`/${locale}/chat`}>{t("file.askInstead")}</Link>
             </p>
           </fieldset>
 

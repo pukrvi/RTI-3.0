@@ -1,11 +1,11 @@
 import Link from "next/link";
+import DashboardActions from "@/components/DashboardActions";
 import FilingCard from "@/components/FilingCard";
 import Icon from "@/components/Icon";
 import { getT } from "@/i18n";
 import { loadAccount } from "@/lib/account";
 import { currentCase } from "@/lib/case";
 import { currentSession } from "@/lib/session";
-import { getProfile } from "@/lib/store";
 
 /**
  * The dashboard.
@@ -30,10 +30,9 @@ export default async function DashboardPage({
   const t = getT(locale);
   const session = (await currentSession())!;
 
-  const [{ items, counts }, draft, profile] = await Promise.all([
+  const [{ items, counts }, draft] = await Promise.all([
     loadAccount(session.contact, locale),
     currentCase(),
-    getProfile(session.contact),
   ]);
 
   const attention = items.filter((i) => i.needsAction);
@@ -68,12 +67,14 @@ export default async function DashboardPage({
         <h1 className="mb-0">{t("acct.dash.h1")}</h1>
       </div>
 
+      <DashboardActions locale={locale} />
+
       {showDraft && (
         <div className="callout callout-info">
           <p className="callout-title">{t("acct.new.draftTitle")}</p>
           <p lang={locale}>“{draft!.question}”</p>
           <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/ask/chat`}>
+            <Link className="btn btn-secondary btn-sm" href={`/${locale}/chat`}>
               {t("acct.new.resume")}
             </Link>
           </p>
@@ -149,22 +150,6 @@ export default async function DashboardPage({
         <div className="grid-2">
           {countCard(t("acct.dash.requests"), counts.requests)}
           {countCard(t("acct.dash.appeals"), counts.appeals)}
-        </div>
-      </section>
-
-      <section className="section" aria-labelledby="details">
-        <h2 id="details">
-          {profile?.updatedAt ? t("acct.dash.profileEdit") : t("acct.dash.profilePrompt")}
-        </h2>
-        <div className={`callout ${profile?.updatedAt ? "callout-ok" : "callout-info"}`}>
-          <p>
-            {profile?.updatedAt ? t("acct.dash.profileDone") : t("acct.dash.profilePromptBody")}
-          </p>
-          <p className="mb-0">
-            <Link className="btn btn-secondary btn-sm" href={`/${locale}/account/profile`}>
-              {profile?.updatedAt ? t("acct.dash.profileEdit") : t("acct.dash.profileCta")}
-            </Link>
-          </p>
         </div>
       </section>
     </>

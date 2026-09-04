@@ -18,6 +18,7 @@ export interface NavItem {
   section: string;
   href: string;
   label: string;
+  external?: boolean;
 }
 
 export default function MainNav({
@@ -39,6 +40,15 @@ export default function MainNav({
   const active = pathname.split("/").filter(Boolean)[1] ?? "";
 
   const link = (item: NavItem, extraClass = "") => {
+    if (item.external) {
+      return (
+        <li key={item.href} className={extraClass}>
+          <a href={item.href} target="_blank" rel="noopener noreferrer">
+            {item.label}
+          </a>
+        </li>
+      );
+    }
     const current = item.section === active;
     return (
       <li key={item.href} className={extraClass}>

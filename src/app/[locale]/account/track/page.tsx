@@ -73,14 +73,14 @@ export default async function TrackStatusPage({
           </div>
         )}
 
-        <form className="card" action={lookupByRef}>
+        <form className="card track-lookup" action={lookupByRef}>
           <input type="hidden" name="locale" value={locale} />
           <div className="field mb-0">
             <label htmlFor="ref">{t("trackIndex.lookupLabel")}</label>
             <span className="hint" id="ref-hint">
               {t("trackIndex.lookupHint")}
             </span>
-            <div className="lookup-row">
+            <div className="finder-searchbox">
               <input
                 type="text"
                 id="ref"

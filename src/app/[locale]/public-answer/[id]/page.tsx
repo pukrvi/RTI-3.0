@@ -71,7 +71,7 @@ export default async function PublicAnswerPage({
           </div>
 
           <p className="small">
-            <Link href={`/${locale}/ask`}>{t("common.back")}</Link>
+            <Link href={`/${locale}/chat`}>{t("common.back")}</Link>
           </p>
         </div>
       </main>
