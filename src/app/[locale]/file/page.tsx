@@ -1,29 +1,38 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Icon from "@/components/Icon";
-import MatchedTokens from "@/components/MatchedTokens";
+import FileGuidelinesDialog, {
+  GuidelinesTrigger,
+} from "@/components/FileGuidelinesDialog";
+import MinistryAuthoritySelects from "@/components/MinistryAuthoritySelects";
 import { formatDate, getT } from "@/i18n";
-import { authorityName, centralAuthorities, currentCase, redirectLabel, redirectNote } from "@/lib/case";
+import { DIRECTORY } from "@/data/directory";
 import { publishedTitle } from "@/data/locale-text";
+import {
+  authorityName,
+  currentCase,
+  redirectLabel,
+  redirectNote,
+  suggestDirectory,
+} from "@/lib/case";
 import { matchPublished, verdict } from "@/lib/match";
 import { scaffoldBody, scaffoldSubject } from "@/lib/scaffold";
 import { currentSession } from "@/lib/session";
 import { getProfile } from "@/lib/store";
-import { confirmAndProceed, draftLetter, submitFiling } from "../actions";
+import { confirmAndProceed, submitFiling } from "../actions";
 
 /**
  * The whole application, on one page.
  *
- * The live portal spreads twelve fields and four screens of scrolling across a
- * seven-step bar that always starts at RTI Mitra, whether you wanted it or
- * not. Here there are two doors — this form, and the assistant — and behind
- * both of them the same single page. Who holds the information, whether it is
- * already published and whether the subject is even Central are still checked
- * before the ₹10 is asked for; the checks just happen on submit instead of
- * occupying three screens of their own.
+ * Three sections: who receives it (apex ministry, then the authority under
+ * it), the request itself (one-line subject, full question, one attachment),
+ * and the applicant's details — prefilled from the account, editable here for
+ * this filing only. The ₹10 fee comes at the end, after every check has run.
  *
- * Coming from the chat, the conversation fills this page in: the question, the
- * letter, the authority it worked out. Everything arrives editable.
+ * Coming from the chat, the conversation fills this page in: the question,
+ * the letter, the authority it worked out. Everything arrives editable.
+ *
+ * The Guidelines and Disclaimer dialog opens on every landing, whichever flow
+ * led here; the trigger beside the heading brings it back once dismissed.
  */
 export default async function FilePage({
   params,
@@ -33,7 +42,7 @@ export default async function FilePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale } = await params;
-  const { error, notice, scaffolded } = await searchParams;
+  const { error, notice } = await searchParams;
   const t = getT(locale);
 
   const session = await currentSession();
@@ -56,28 +65,44 @@ export default async function FilePage({
       ? error.split(",").filter(Boolean)
       : [],
   );
-  const stateStop = error === "state" && file ? verdict(file.question) : null;
+
+  // The pre-payment checks read whatever the citizen has said so far: the
+  // chat question when there is one, else the subject and letter on the form.
+  const checkText =
+    file?.question ||
+    [file?.subject, file?.body].filter(Boolean).join(" ").trim();
+  const stateStop =
+    error === "state" && checkText ? verdict(checkText) : null;
   const published =
-    notice === "published" && file ? matchPublished(file.question) : [];
+    notice === "published" && checkText ? matchPublished(checkText) : [];
 
   const errorMessage: Record<string, string> = {
     question: t("file.errQuestion"),
     authorityId: t("file.errAuthority"),
+    ministry: t("file.errMinistry"),
+    authorityText: t("file.errAuthority"),
     subject: t("compose.errSubject"),
     body: t("compose.errBody"),
     name: t("compose.errName"),
     email: t("compose.errEmail"),
+    attachment: t("compose.errAttach"),
   };
 
-  const result = file?.question ? verdict(file.question) : null;
   const fromChat = Boolean(file?.chat?.length);
-  const suggested =
-    result?.kind === "in-scope" && !file?.authorityId
-      ? result.central.item
-      : undefined;
-  const chosen = file?.authorityId
-    ? centralAuthorities().find((a) => a.id === file.authorityId)
-    : undefined;
+
+  // A routing suggestion from the citizen's own words, mapped onto the two
+  // dropdowns — used only until they choose for themselves.
+  let suggested: { ministry: string; authorityText: string } | null = null;
+  if (!file?.ministry && !file?.authorityId && checkText) {
+    const v = verdict(checkText);
+    if (v.kind === "in-scope") suggested = await suggestDirectory(v.central.item.id);
+  }
+  if (!file?.ministry && !file?.authorityText && file?.authorityId) {
+    suggested = await suggestDirectory(file.authorityId);
+  }
+  const initialMinistry = file?.ministry ?? suggested?.ministry ?? "";
+  const initialAuthority = file?.authorityText ?? suggested?.authorityText ?? "";
+
   const prefill = (key: "name" | "email" | "addr1" | "addr2" | "addr3" | "pin") =>
     file?.[key] ?? saved?.[key] ?? "";
 
@@ -86,21 +111,46 @@ export default async function FilePage({
   const subject = file?.subject ?? (file?.question ? scaffoldSubject(file.question, t) : "");
   const body = file?.body ?? (file?.question ? scaffoldBody(file.question, t) : "");
 
+  const guideSections = [
+    {
+      heading: t("file.guide.s1h"),
+      items: [t("file.guide.s1i1"), t("file.guide.s1i2"), t("file.guide.s1i3"), t("file.guide.s1i4")],
+    },
+    {
+      heading: t("file.guide.s2h"),
+      items: [t("file.guide.s2i1"), t("file.guide.s2i2"), t("file.guide.s2i3"), t("file.guide.s2i4")],
+    },
+    {
+      heading: t("file.guide.s3h"),
+      items: [t("file.guide.s3i1"), t("file.guide.s3i2"), t("file.guide.s3i3"), t("file.guide.s3i4")],
+    },
+    {
+      heading: t("file.guide.s4h"),
+      items: [t("file.guide.s4i1"), t("file.guide.s4i2"), t("file.guide.s4i3"), t("file.guide.s4i4")],
+    },
+  ];
+
   // The before-you-pay notices render above the form, and the form keeps every
   // word typed — a notice must never cost anybody their draft.
   return (
     <main id="main">
       <div className="wrap stack-lg">
-        <div>
+        <div className="file-head">
           <h1>{t("file.h1")}</h1>
-          <p>{t("file.intro")}</p>
+          <p className="mb-0">
+            <GuidelinesTrigger label={t("file.guide.open")} />
+          </p>
         </div>
+
+        <FileGuidelinesDialog
+          title={t("file.guide.title")}
+          sections={guideSections}
+          closeLabel={t("file.guide.close")}
+        />
 
         {fromChat && (
           <div className="callout callout-info">
-            <p className="mb-0">
-              <Icon name="chat" /> {t("file.fromSahayak")}
-            </p>
+            <p className="mb-0">{t("file.fromSahayak")}</p>
           </div>
         )}
 
@@ -177,7 +227,7 @@ export default async function FilePage({
             <ul className="list-tight mb-0">
               {[...bad].map((key) => (
                 <li key={key}>
-                  <a href={`#${key}`}>{errorMessage[key] ?? key}</a>
+                  <a href={`#${key === "authorityText" ? "authority-select" : key === "ministry" ? "ministry-select" : key}`}>{errorMessage[key] ?? key}</a>
                 </li>
               ))}
             </ul>
@@ -191,49 +241,24 @@ export default async function FilePage({
           )}
 
           {/* ------------------------------------------------ 1. authority -- */}
-          <fieldset className="card">
-            <legend>{t("file.secAuthority")}</legend>
-            <div className={`field ${bad.has("authorityId") ? "field-error" : ""}`}>
-              <label htmlFor="authority-select">{t("authority.selectLabel")}</label>
-              <span className="hint" id="authority-select-hint">
-                {t("authority.selectHint")}
-              </span>
-              <select
-                id="authority-select"
-                name="authorityId"
-                defaultValue={file?.authorityId ?? suggested?.id ?? ""}
-                aria-describedby={`authority-select-hint${bad.has("authorityId") ? " authority-select-error" : ""}`}
-                aria-invalid={bad.has("authorityId") || undefined}
-                required
-              >
-                <option value="" disabled>
-                  —
-                </option>
-                {centralAuthorities().map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {authorityName(a, locale)}
-                    {a.ministry ? ` — ${a.ministry}` : ""}
-                  </option>
-                ))}
-              </select>
-              {bad.has("authorityId") && (
-                <p className="error-text" id="authority-select-error">
-                  {t("file.errAuthority")}
-                </p>
-              )}
-            </div>
-
-            {chosen && result?.kind === "in-scope" && result.central.item.id === chosen.id && (
-              <div className="callout callout-ok">
-                <p className="callout-title">{t("authority.inScope")}</p>
-                <p className="mb-0">{t("authority.inScopeBody")}</p>
-                <MatchedTokens t={t} matched={result.central.matched} />
-              </div>
-            )}
-            {suggested && (
+          <fieldset className="card file-sec">
+            <legend>
+              <span className="sec-num" aria-hidden="true">1</span>{" "}
+              {t("file.secAuthority")}
+            </legend>
+            <MinistryAuthoritySelects
+              entries={DIRECTORY}
+              initialMinistry={initialMinistry}
+              initialAuthority={initialAuthority}
+              ministryLabel={t("file.ministryLabel")}
+              ministryHint={t("file.ministryHint")}
+              authorityLabel={t("file.authorityLabel")}
+              authorityHint={t("file.authorityHint")}
+              ministryError={bad.has("ministry") ? t("file.errMinistry") : undefined}
+              authorityError={bad.has("authorityText") ? t("file.errAuthority") : undefined}
+            />
+            {suggested && !file?.ministry && !file?.authorityText && (
               <p className="small muted mb-0">
-                {t("authority.inScope")} —{" "}
-                <strong>{authorityName(suggested, locale)}</strong>.{" "}
                 {t("file.suggestedNote")}
               </p>
             )}
@@ -242,43 +267,12 @@ export default async function FilePage({
             </p>
           </fieldset>
 
-          {/* -------------------------------------------------- 2. question -- */}
-          <fieldset className="card">
-            <legend>{t("file.secRequest")}</legend>
-
-            <div className={`field ${bad.has("question") ? "field-error" : ""}`}>
-              <label htmlFor="question">{t("file.qLabel")}</label>
-              <span className="hint" id="question-hint">
-                {t("file.qHint")}
-              </span>
-              <textarea
-                id="question"
-                name="question"
-                rows={3}
-                required
-                lang={locale}
-                defaultValue={file?.question ?? ""}
-                aria-describedby={`question-hint${bad.has("question") ? " question-error" : ""}`}
-                aria-invalid={bad.has("question") || undefined}
-              />
-              {bad.has("question") && (
-                <p className="error-text" id="question-error">
-                  {t("file.errQuestion")}
-                </p>
-              )}
-            </div>
-
-            <p className="small mb-0">
-              <button type="submit" className="btn btn-quiet" formAction={draftLetter}>
-                {t("file.draftLetter")}
-              </button>
-            </p>
-
-            {scaffolded && (
-              <p className="callout callout-info small mb-0">
-                <Icon name="check" /> {t("compose.scaffoldNote")}
-              </p>
-            )}
+          {/* -------------------------------------------------- 2. request -- */}
+          <fieldset className="card file-sec">
+            <legend>
+              <span className="sec-num" aria-hidden="true">2</span>{" "}
+              {t("file.secRequest")}
+            </legend>
 
             <div className={`field ${bad.has("subject") ? "field-error" : ""}`}>
               <label htmlFor="subject">
@@ -313,7 +307,7 @@ export default async function FilePage({
                 <span className="visually-hidden"> ({t("common.required")})</span>
               </label>
               <span className="hint" id="body-hint">
-                {t("compose.bodyHint")} {t("compose.bodyUnicode")}
+                {t("compose.bodyHint")} {t("compose.bodyUnicode")} {t("compose.bodyMax")}
               </span>
               <textarea
                 id="body"
@@ -321,6 +315,7 @@ export default async function FilePage({
                 rows={10}
                 defaultValue={body}
                 required
+                maxLength={5000}
                 lang={locale}
                 aria-describedby={`body-hint${bad.has("body") ? " body-error" : ""}`}
                 aria-invalid={bad.has("body") || undefined}
@@ -328,6 +323,34 @@ export default async function FilePage({
               {bad.has("body") && (
                 <p className="error-text" id="body-error">
                   {t("compose.errBody")}
+                </p>
+              )}
+            </div>
+
+            <div className={`field ${bad.has("attachment") ? "field-error" : ""}`}>
+              <label htmlFor="attachment">
+                {t("compose.attachLabel")}{" "}
+                <span className="muted smaller">({t("common.optional")})</span>
+              </label>
+              <span className="hint" id="attachment-hint">
+                {t("compose.attachHint")}
+              </span>
+              <input
+                type="file"
+                id="attachment"
+                name="attachment"
+                accept=".pdf,.jpg,.jpeg,.png"
+                aria-describedby={`attachment-hint${bad.has("attachment") ? " attachment-error" : ""}`}
+                aria-invalid={bad.has("attachment") || undefined}
+              />
+              {file?.attachmentName && (
+                <p className="small muted mb-0">
+                  {file.attachmentName}
+                </p>
+              )}
+              {bad.has("attachment") && (
+                <p className="error-text" id="attachment-error">
+                  {t("compose.errAttach")}
                 </p>
               )}
             </div>
@@ -344,9 +367,11 @@ export default async function FilePage({
           </fieldset>
 
           {/* -------------------------------------------------- 3. details -- */}
-          <fieldset className="card">
-            <legend>{t("compose.contact")}</legend>
-            <p className="small muted">{t("compose.contactNote")}</p>
+          <fieldset className="card file-sec">
+            <legend>
+              <span className="sec-num" aria-hidden="true">3</span>{" "}
+              {t("compose.contact")}
+            </legend>
             {saved?.updatedAt && (
               <p className="small muted">
                 {t("compose.fromProfile")}{" "}

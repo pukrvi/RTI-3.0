@@ -2,25 +2,23 @@ import Link from "next/link";
 import Icon, { type IconName } from "@/components/Icon";
 
 /**
- * Dashboard top actions, after the Paper "Dashboard Top Buttons" frame.
+ * The filing front door, shown on `account/new`.
  *
- * Eight whole-card links in a 2 / 3 / 3 grid: "File an RTI" first and wide,
- * "Try RTI Mitra AI" beside it, then the six secondary routes in two rows of
- * three. "File an RTI" is the only primary card on the page. Each card is its
- * own link — icon beside a title over a one-line body — reusing the
- * `.action-card` pattern from the filing front door (`account/new`), so there
- * are no buttons here at all.
+ * Moved here from the dashboard top: five whole-card links in a 2 / 3 grid —
+ * "File an RTI Manually" first and wide (straight to the one-page `/file`
+ * form), "File with RTI Mitra AI" beside it (into the `/chat` assistant),
+ * then the three helper routes in one row of three. "File an RTI Manually"
+ * is the only primary card on the page. Each card is its own link — icon
+ * beside a title over a one-line body — with no buttons here at all.
  *
- * Icons are this prototype's own set (`Icon.tsx`): `plus` for filing (same as
- * "File a new request"), `clock` for tracking (same as the account track
- * nav), `appeal` for first appeal (same as the appeals nav), `chat` for
- * RTI Mitra (same as the assistant), `history` for history (same as the
- * history nav), `help` for the process guide, `act` for the Act/rights
- * (same book as "Read the RTI Act"), and `building` for the authority list
- * (same as the finder). No Paper icon is reused.
+ * Icons are this prototype's own set (`Icon.tsx`): `plus` for manual filing,
+ * `chat` for RTI Mitra (same as the assistant), `help` for the process guide,
+ * `act` for the Act/rights (same book as "Read the RTI Act"), and `building`
+ * for the authority list (same as the finder). No Paper icon is reused.
  *
  * Titles and bodies are quoted VERBATIM from the Paper frame, including its
  * typos ("asnwerable though") — do not tidy them; the copy is owned there.
+ * The two filing titles are the exception: renamed per board direction.
  */
 interface DashboardAction {
   href: (locale: string) => string;
@@ -34,35 +32,17 @@ interface DashboardAction {
 
 const ACTIONS: DashboardAction[] = [
   {
-    href: (locale) => `/${locale}/account/new`,
+    href: (locale) => `/${locale}/file`,
     icon: "plus",
-    title: "File an RTI",
+    title: "File an RTI Manually",
     body: "Tell us what you want to know. We'll find who holds it and help you request it.",
     primary: true,
   },
   {
     href: (locale) => `/${locale}/chat`,
     icon: "chat",
-    title: "Try RTI Mitra AI",
+    title: "File with RTI Mitra AI",
     body: "Use AI to find already published information and right authorities",
-  },
-  {
-    href: (locale) => `/${locale}/account/track`,
-    icon: "clock",
-    title: "Track an RTI",
-    body: "Check the status of a request you've already filed.",
-  },
-  {
-    href: (locale) => `/${locale}/account/appeals`,
-    icon: "appeal",
-    title: "Submit first appeal",
-    body: "No response yet or dissatisfied with the response? File a first appeal.",
-  },
-  {
-    href: (locale) => `/${locale}/account/history`,
-    icon: "history",
-    title: "View history",
-    body: "View all your past requests and appeals.",
   },
   {
     href: (locale) => `/${locale}/account/process`,
@@ -91,8 +71,6 @@ const ACTIONS: DashboardAction[] = [
 export default function DashboardActions({ locale }: { locale: string }) {
   const [first, second, ...rest] = ACTIONS;
   const top = [first, second];
-  const mid = rest.slice(0, 3);
-  const bottom = rest.slice(3);
 
   const renderCard = (action: DashboardAction) => {
     const inner = (
@@ -127,8 +105,7 @@ export default function DashboardActions({ locale }: { locale: string }) {
   return (
     <nav className="dash-actions" aria-label="Common tasks">
       <div className="dash-actions-top">{top.map(renderCard)}</div>
-      <div className="card-grid card-grid-3">{mid.map(renderCard)}</div>
-      <div className="card-grid card-grid-3">{bottom.map(renderCard)}</div>
+      <div className="card-grid card-grid-3">{rest.map(renderCard)}</div>
     </nav>
   );
 }

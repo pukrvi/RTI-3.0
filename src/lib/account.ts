@@ -9,7 +9,7 @@
  * filings need the citizen to do something. That is the number the six do not
  * contain, and it is the only one worth looking at first.
  */
-import { authorityById, authorityName } from "@/lib/case";
+import { caseAuthorityLabel } from "@/lib/case";
 import {
   appealWindow,
   effectiveNow,
@@ -63,7 +63,6 @@ export async function loadAccount(
     const now = effectiveNow(file.clockOffsetDays);
     const clock = replyClock(file.filed!.at, now, file.reply?.at);
     const window = appealWindow(file.filed!.at, now, file.reply?.at);
-    const authority = authorityById(file.authorityId);
 
     const state: ItemState = clock.state;
     const needsAction =
@@ -73,7 +72,7 @@ export async function loadAccount(
 
     return {
       file,
-      authority: authority ? authorityName(authority, locale) : "",
+      authority: caseAuthorityLabel(file, locale),
       clock,
       window,
       state,

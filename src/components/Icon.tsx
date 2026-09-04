@@ -24,7 +24,11 @@ export type IconName =
   | "plus"
   | "history"
   | "id"
-  | "exit";
+  | "exit"
+  | "mic"
+  | "send"
+  | "file"
+  | "back";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   search: (
@@ -148,6 +152,32 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M6.5 12h8" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 18v3" />
+    </>
+  ),
+  send: (
+    <>
+      <path d="M4.5 12 20 4.5 13.5 20l-2.3-6.2Z" />
+      <path d="M11.2 13.8 20 4.5" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M5 21V5a2 2 0 0 1 2-2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2Z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13.5h6M9 17h6" />
+    </>
+  ),
+  back: (
+    <>
+      <path d="M19 12H5" />
+      <path d="m11 6-6 6 6 6" />
+    </>
+  ),
 };
 
 export default function Icon({
@@ -157,6 +187,9 @@ export default function Icon({
   name: IconName;
   className?: string;
 }) {
+  // Never render an empty circle: on a stale cached bundle that predates a
+  // newly added glyph, fall back to the help mark instead of nothing.
+  const paths = PATHS[name] ?? PATHS.help;
   return (
     <svg
       className={`icon ${className}`.trim()}
@@ -169,7 +202,7 @@ export default function Icon({
       aria-hidden="true"
       focusable="false"
     >
-      {PATHS[name]}
+      {paths}
     </svg>
   );
 }

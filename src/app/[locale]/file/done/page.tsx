@@ -3,7 +3,7 @@ import Icon from "@/components/Icon";
 import PrintButton from "@/components/PrintButton";
 import { formatDate, getT } from "@/i18n";
 import { REPLY_DAYS } from "@/lib/deadline";
-import { authorityById, authorityName, currentCase } from "@/lib/case";
+import { caseAuthorityLabel, currentCase } from "@/lib/case";
 import { currentSession } from "@/lib/session";
 
 /**
@@ -41,7 +41,7 @@ export default async function FiledConfirmationPage({
     );
   }
 
-  const authority = authorityById(file.authorityId);
+  const authority = caseAuthorityLabel(file, locale);
   const session = await currentSession();
   const due = new Date(
     new Date(file.filed.at).getTime() + REPLY_DAYS * 24 * 60 * 60 * 1000,
@@ -71,7 +71,7 @@ export default async function FiledConfirmationPage({
             </div>
             <div>
               <dt>{t("track.with")}</dt>
-              <dd>{authority ? authorityName(authority, locale) : "—"}</dd>
+              <dd lang="en">{authority}</dd>
             </div>
             <div>
               <dt>{t("track.subject")}</dt>

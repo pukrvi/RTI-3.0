@@ -35,7 +35,10 @@ import {
   setCaseCookie,
   clearCaseCookie,
   authorityById,
+  caseAuthorityCode,
 } from "@/lib/case";
+import { DIRECTORY } from "@/data/directory";
+import { AUTHORITIES } from "@/data/authorities";
 import { makeRef } from "@/lib/ref";
 import { effectiveNow, appealWindow } from "@/lib/deadline";
 
@@ -155,14 +158,69 @@ export async function continueToRouting(form: FormData) {
 /**
  * The single filing form. Saved first, validated second, so nothing typed is
  * ever lost, and every guardrail runs before the money, not after it.
+ *
+ * The authority arrives as two directory values — the apex ministry and the
+ * public authority under it — plus a routable id whenever the choice maps to
+ * one the keyword router knows. Attachments are metadata only: the file bytes
+ * are never stored in this prototype.
  */
+const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
+
+const normName = (s: string) =>
+  s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim();
+
 export async function submitFiling(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const existing = await requireCase();
 
+  const ministry = str(form, "ministry");
+  let authorityText = str(form, "authorityText");
+  // No-JS fallback: changing the ministry without the script leaves the old
+  // authority list on screen. Trust the authority the citizen picked and
+  // re-derive its parent, rather than filing it under the wrong ministry.
+  let resolvedMinistry = ministry;
+  if (authorityText) {
+    const { directoryParentFor } = await import("@/lib/case");
+    const parent = DIRECTORY.find((e) => e.name === ministry);
+    const underParent =
+      !parent ||
+      parent.name === authorityText ||
+      parent.children.includes(authorityText);
+    if (!underParent) {
+      const actual = await directoryParentFor(authorityText);
+      if (actual) resolvedMinistry = actual;
+    }
+  } else if (ministry) {
+    // A ministry with no authority choice is a filing against the apex body.
+    authorityText = ministry;
+  }
+
+  // Keep the routable id when the choice maps to one, so the keyword checks
+  // and the prepared suggestion keep working on directory filings.
+  let authorityId = "";
+  const apex = DIRECTORY.find((e) => e.name === resolvedMinistry);
+  if (apex?.routes && normName(apex.name) === normName(authorityText)) {
+    authorityId = apex.routes;
+  }
+  if (!authorityId) {
+    const byName = AUTHORITIES.find((a) => normName(a.name) === normName(authorityText));
+    if (byName) authorityId = byName.id;
+  }
+
+  const rawAttachment = form.get("attachment");
+  const attachment =
+    rawAttachment &&
+    typeof rawAttachment === "object" &&
+    "size" in rawAttachment &&
+    typeof (rawAttachment as { size: unknown }).size === "number" &&
+    (rawAttachment as unknown as File).size > 0
+      ? (rawAttachment as unknown as File)
+      : null;
+
   const values = {
-    question: str(form, "question"),
-    authorityId: str(form, "authorityId"),
+    ministry: resolvedMinistry,
+    authorityText,
+    authorityId: authorityId || undefined,
     subject: str(form, "subject"),
     body: str(form, "body"),
     name: str(form, "name"),
@@ -171,31 +229,50 @@ export async function submitFiling(form: FormData) {
     addr2: str(form, "addr2"),
     addr3: str(form, "addr3"),
     pin: str(form, "pin"),
+    ...(attachment
+      ? {
+          attachmentName: attachment.name || "attachment",
+          attachmentSize: attachment.size,
+          attachmentType: attachment.type || "",
+        }
+      : {}),
   };
 
   let file = existing;
   if (!file || file.filed) {
     const id = newCaseId();
-    file = { id, createdAt: new Date().toISOString(), locale, clockOffsetDays: 0, ...values };
+    file = {
+      id,
+      createdAt: new Date().toISOString(),
+      locale,
+      clockOffsetDays: 0,
+      question: "",
+      ...values,
+    };
     await putCase(file);
     await setCaseCookie(file.id);
   } else {
     file = (await updateCase(file.id, values)) ?? file;
   }
 
-  const missing = (["question", "authorityId", "subject", "body", "name", "email"] as const).filter(
+  const missing = (["ministry", "authorityText", "subject", "body", "name", "email"] as const).filter(
     (k) => !values[k],
   );
   if (missing.length) redirect(`/${locale}/file?error=${missing.join(",")}`);
-  if (!authorityById(values.authorityId)) redirect(`/${locale}/file?error=authorityId`);
+  if (attachment && attachment.size > ATTACHMENT_MAX_BYTES) {
+    redirect(`/${locale}/file?error=attachment`);
+  }
 
   // The two checks that the live portal does after taking the ₹10, done here
   // before it. Both are gates on this journey, and both offer a way through —
-  // the citizen may know better than the keyword matcher.
+  // the citizen may know better than the keyword matcher. The question comes
+  // from the conversation when there is one, else from the letter itself.
   if (str(form, "confirmed") !== "1") {
-    const v = verdict(values.question);
+    const checkText =
+      file.question || `${values.subject} ${values.body}`.trim();
+    const v = verdict(checkText);
     if (v.kind === "out-of-scope") redirect(`/${locale}/file?error=state`);
-    if (!file?.dismissedPublished && matchPublished(values.question).length) {
+    if (!file?.dismissedPublished && matchPublished(checkText).length) {
       redirect(`/${locale}/file?notice=published`);
     }
   }
@@ -261,7 +338,9 @@ export async function payAndFile(form: FormData) {
   if (!existing) redirect(`/${locale}/file`);
 
   const authority = authorityById(existing.authorityId);
-  if (!authority) redirect(`/${locale}/file?error=authorityId`);
+  if (!authority && !existing.authorityText && !existing.ministry) {
+    redirect(`/${locale}/file?error=authorityId`);
+  }
   const missing = (["subject", "body", "name", "email"] as const).filter(
     (k) => !existing[k],
   );
@@ -269,7 +348,7 @@ export async function payAndFile(form: FormData) {
 
   const at = new Date().toISOString();
   const session = await currentSession();
-  const ref = makeRef(authority.code, "R", at, existing.id);
+  const ref = makeRef(caseAuthorityCode(existing), "R", at, existing.id);
   await updateCase(existing.id, {
     filed: { ref, at },
     owner: session?.contact,
@@ -277,19 +356,9 @@ export async function payAndFile(form: FormData) {
   await indexRef(ref, existing.id);
   if (session) {
     await addToAccount(session.contact, existing.id);
-    // What was typed at filing joins the account, so the next request starts
-    // from it. The account is what makes the second filing short.
-    const saved = (await getProfile(session.contact)) ?? {};
-    await putProfile(session.contact, {
-      ...saved,
-      name: existing.name || saved.name,
-      email: existing.email || saved.email,
-      addr1: existing.addr1 || saved.addr1,
-      addr2: existing.addr2 || saved.addr2,
-      addr3: existing.addr3 || saved.addr3,
-      pin: existing.pin || saved.pin,
-      updatedAt: new Date().toISOString(),
-    });
+    // Deliberately no profile write-back: what was changed at filing time
+    // belongs to this filing only. The account keeps what the citizen saved
+    // there, and the next request starts from that.
   }
 
   redirect(`/${locale}/file/done`);
@@ -368,14 +437,16 @@ export async function fileAppeal(form: FormData) {
   if (!existing?.filed) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
 
   const authority = authorityById(existing.authorityId);
-  if (!authority) redirect(`/${locale}/file?error=authorityId`);
+  if (!authority && !existing.authorityText && !existing.ministry) {
+    redirect(`/${locale}/file?error=authorityId`);
+  }
 
   const now = effectiveNow(existing.clockOffsetDays);
   const window = appealWindow(existing.filed.at, now, existing.reply?.at);
   if (!window.isOpen) redirect(`/${locale}/track/${id}?error=window`);
 
   const at = now.toISOString();
-  const ref = makeRef(authority.code, "A", at, existing.id);
+  const ref = makeRef(caseAuthorityCode(existing), "A", at, existing.id);
   await updateCase(id, { appeal: { ref, at, ground, text } });
   await indexRef(ref, id);
   redirect(`/${locale}/track/${id}`);

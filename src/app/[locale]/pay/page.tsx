@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getT } from "@/i18n";
-import { authorityById, authorityName, currentCase } from "@/lib/case";
+import { caseAuthorityLabel, currentCase } from "@/lib/case";
 import { currentSession } from "@/lib/session";
 import { getProfile } from "@/lib/store";
 import { payAndFile } from "../actions";
@@ -30,8 +30,9 @@ export default async function PayPage({
 
   const file = await currentCase();
   if (!file) redirect(`/${locale}/file`);
-  const authority = authorityById(file.authorityId);
-  if (!authority) redirect(`/${locale}/file?error=authorityId`);
+  if (!file.authorityId && !file.authorityText && !file.ministry) {
+    redirect(`/${locale}/file?error=authorityId`);
+  }
   if (!file.subject || !file.body) redirect(`/${locale}/file`);
 
   // Section 7(5): no fee at all for an applicant below the poverty line. The
@@ -71,12 +72,18 @@ export default async function PayPage({
           <dl className="kv">
             <div>
               <dt>{t("track.with")}</dt>
-              <dd>{authorityName(authority, locale)}</dd>
+              <dd lang="en">{caseAuthorityLabel(file, locale)}</dd>
             </div>
             <div>
               <dt>{t("track.subject")}</dt>
               <dd lang={locale}>{file.subject}</dd>
             </div>
+            {file.attachmentName && (
+              <div>
+                <dt>{t("compose.attachLabel")}</dt>
+                <dd>{file.attachmentName}</dd>
+              </div>
+            )}
             <div>
               <dt>{t("pay.line2")}</dt>
               <dd>{fee}</dd>

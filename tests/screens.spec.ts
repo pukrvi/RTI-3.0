@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { beginRequest, continueFromChat } from "./helpers";
+import { beginRequest, continueFromChat, dismissGuidelines } from "./helpers";
 
 /**
  * Walks the journey taking a screenshot at each step, and asserts that no page
@@ -92,6 +92,7 @@ test("journey screenshots", async ({ page }, testInfo) => {
     await details.click();
   }
   await expect(cont).toBeVisible();
+  await dismissGuidelines(page);
   await shot("04-file-form");
 
   await cont.click();

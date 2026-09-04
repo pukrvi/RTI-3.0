@@ -1,22 +1,23 @@
 import Link from "next/link";
-import Icon from "@/components/Icon";
+import DashboardActions from "@/components/DashboardActions";
 import { getT } from "@/i18n";
 import { currentCase } from "@/lib/case";
 
 /**
  * The front door to filing, from inside the account.
  *
- * Four whole-card links, ranked: filing first and full-width, the three
- * "check first" routes beneath it in the site's standard three-up grid. There
- * is exactly one primary card on the page and no buttons at all — each card
- * is its own link, with the icon beside a title and a one-line body, after
- * the Paper "Home 1c" pattern. The card titles and bodies reuse the existing
- * dictionary strings, so no new English/Hindi/Bengali copy was needed: the
- * Mitra card's body ("finds what is already published and names the
- * authority that holds the rest") plus the scope note below it carry the
- * check-first and Central-only meaning. The state-scope warning survives as
- * one compact line, because the wrong-portal problem is real, but three
- * sentences of it buried the cards it was protecting.
+ * A draft from the chat first, when there is one — then the five action
+ * cards moved here from the dashboard top: the two filing routes wide
+ * ("File an RTI Manually" straight to the one-page form, "File with RTI
+ * Mitra AI" into the assistant) and the three helper routes beneath them.
+ * The old front door (filing-first card, three "check first" routes, scope
+ * warning) is gone.
+ *
+ * The `.new-fill` wrapper marks this short page for the footer rule in
+ * globals.css: the account column absorbs the free viewport height so the
+ * footer rests at the fold instead of floating mid-page. It carries
+ * `stack-lg` because it is now the `main` element's only child — the spacing
+ * between heading, draft and cards is unchanged.
  */
 export default async function NewRequestPage({
   params,
@@ -29,7 +30,7 @@ export default async function NewRequestPage({
   const showDraft = draft && !draft.filed && draft.question;
 
   return (
-    <>
+    <div className="new-fill stack-lg">
       <h1 className="mb-0">{t("acct.new.h1")}</h1>
 
       {showDraft && (
@@ -44,54 +45,7 @@ export default async function NewRequestPage({
         </div>
       )}
 
-      <Link className="action-card action-card-primary" href={`/${locale}/file`}>
-        <span className="action-ic" aria-hidden="true">
-          <Icon name="plus" />
-        </span>
-        <span className="action-tx">
-          <span className="action-t">{t("acct.new.fileCta")}</span>
-          <span className="action-d">{t("acct.new.fileBody")}</span>
-        </span>
-      </Link>
-
-      <div className="card-grid card-grid-3">
-        <Link className="action-card" href={`/${locale}/chat`}>
-          <span className="action-ic" aria-hidden="true">
-            <Icon name="search" />
-          </span>
-          <span className="action-tx">
-            <span className="action-t">{t("acct.new.searchTitle")}</span>
-            <span className="action-d">{t("acct.new.searchBody")}</span>
-          </span>
-        </Link>
-
-        <Link className="action-card" href={`/${locale}/authorities`}>
-          <span className="action-ic" aria-hidden="true">
-            <Icon name="building" />
-          </span>
-          <span className="action-tx">
-            <span className="action-t">{t("acct.new.dirTitle")}</span>
-            <span className="action-d">{t("acct.new.dirBody")}</span>
-          </span>
-        </Link>
-
-        <Link className="action-card" href={`/${locale}/published`}>
-          <span className="action-ic" aria-hidden="true">
-            <Icon name="archive" />
-          </span>
-          <span className="action-tx">
-            <span className="action-t">{t("acct.new.pubTitle")}</span>
-            <span className="action-d">{t("acct.new.pubBody")}</span>
-          </span>
-        </Link>
-      </div>
-
-      <div className="callout callout-warn callout-compact">
-        <p className="mb-0">
-          <Icon name="alert" />
-          <strong>{t("hp.scope")}.</strong> {t("acct.new.scopeNote")}
-        </p>
-      </div>
-    </>
+      <DashboardActions locale={locale} />
+    </div>
   );
 }
