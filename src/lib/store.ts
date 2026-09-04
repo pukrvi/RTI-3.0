@@ -59,12 +59,22 @@ export interface CaseFile {
   /** Step 2 */
   dismissedPublished?: boolean;
 
-  /** Step 3 */
+  /** Step 3 — directory routing: the apex ministry/department, and the
+   *  public authority chosen under it (the apex body itself, or one of its
+   *  listed authorities). Kept alongside the legacy routable id below. */
+  ministry?: string;
+  authorityText?: string;
+
+  /** Step 3 (legacy) — id in `authorities.ts`, when the choice maps to one. */
   authorityId?: string;
 
   /** Step 4 */
   subject?: string;
   body?: string;
+  /** Attachment metadata only — file bytes are never stored in this prototype. */
+  attachmentName?: string;
+  attachmentSize?: number;
+  attachmentType?: string;
   name?: string;
   email?: string;
   addr1?: string;

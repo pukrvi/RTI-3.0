@@ -17,7 +17,10 @@ test("the whole journey works with scripting disabled", async ({ page }) => {
   await continueFromChat(page);
   await page.waitForURL(/\/file$/);
 
-  await expect(page.getByText("This is a Central Government subject")).toBeVisible();
+  await expect(page.locator("#ministry-select")).not.toHaveValue("");
+  await expect(page.locator("#authority-select option:checked")).toContainText(
+    "Ministry of Rural Development",
+  );
 
   await page.getByLabel("Your name").fill("A. Citizen");
   await page.getByLabel(/Email address/).fill("someone@example.org");

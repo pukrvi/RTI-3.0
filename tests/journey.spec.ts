@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { axeScan, beginRequest, continueFromChat, watchConsole } from "./helpers";
+import { axeScan, beginRequest, continueFromChat, dismissGuidelines, watchConsole } from "./helpers";
 
 /**
  * The whole citizen journey, end to end, on a phone-sized screen and a desktop.
@@ -38,7 +38,8 @@ test.describe("pre-filing journey", () => {
     // 2 — One page for the whole application, filled in from the conversation:
     // the authority it worked out, the question, the letter started.
     await expect(page).toHaveURL(/\/en\/file$/);
-    await expect(page.getByText("This is a Central Government subject")).toBeVisible();
+    await dismissGuidelines(page);
+    await expect(page.locator("#ministry-select")).not.toHaveValue("");
     await expect(page.locator("#authority-select")).not.toHaveValue("");
     await expect(page.locator("#authority-select option:checked")).toContainText(
       "Ministry of Rural Development",
@@ -134,6 +135,7 @@ test.describe("pre-filing journey", () => {
     await continueFromChat(page, "hi");
 
     await expect(page).toHaveURL(/\/hi\/file$/);
+    await dismissGuidelines(page);
     await page.getByLabel("आपका नाम").fill("क. नगरिक");
     await page.getByLabel("ईमेल पता").fill("someone@example.org");
     await page.getByRole("button", { name: "भुगतान पर जारी रखें" }).click();

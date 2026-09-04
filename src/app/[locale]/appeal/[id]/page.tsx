@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDate, getT } from "@/i18n";
-import { authorityById, authorityName } from "@/lib/case";
+import { caseAuthorityLabel } from "@/lib/case";
 import { getCase } from "@/lib/store";
 import { appealWindow, effectiveNow, replyClock } from "@/lib/deadline";
 import { appealScaffold } from "@/lib/scaffold";
@@ -27,7 +27,7 @@ export default async function AppealPage({
   const file = await getCase(id);
   if (!file?.filed) notFound();
 
-  const authority = authorityById(file.authorityId);
+  const authority = caseAuthorityLabel(file, locale);
   const now = effectiveNow(file.clockOffsetDays);
   const clock = replyClock(file.filed.at, now, file.reply?.at);
   const win = appealWindow(file.filed.at, now, file.reply?.at);
@@ -70,7 +70,7 @@ export default async function AppealPage({
               </div>
               <div>
                 <dt>{t("track.with")}</dt>
-                <dd>{authority ? authorityName(authority, locale) : "—"}</dd>
+                <dd lang="en">{authority}</dd>
               </div>
               <div>
                 <dt>{t("track.subject")}</dt>

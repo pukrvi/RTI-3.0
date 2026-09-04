@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PrintButton from "@/components/PrintButton";
 import { formatDate, getT, type Translate } from "@/i18n";
-import { authorityById, authorityName, readCaseId } from "@/lib/case";
+import { caseAuthorityLabel, readCaseId } from "@/lib/case";
 import { getCase } from "@/lib/store";
 import { isDemoCaseId } from "@/data/demo-account";
 import {
@@ -149,7 +149,7 @@ export default async function TrackPage({
     );
   }
 
-  const authority = authorityById(file.authorityId);
+  const authority = caseAuthorityLabel(file, locale);
   const now = effectiveNow(file.clockOffsetDays);
   const clock = replyClock(file.filed.at, now, file.reply?.at);
   const appealWin = appealWindow(file.filed.at, now, file.reply?.at);
@@ -221,7 +221,7 @@ export default async function TrackPage({
               </div>
               <div>
                 <dt>{t("track.with")}</dt>
-                <dd>{authority ? authorityName(authority, locale) : "—"}</dd>
+                <dd lang="en">{authority}</dd>
               </div>
               <div>
                 <dt>{t("track.subject")}</dt>

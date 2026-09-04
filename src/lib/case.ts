@@ -38,6 +38,69 @@ export function authorityById(id: string | undefined): Authority | undefined {
   return AUTHORITIES.find((a) => a.id === id);
 }
 
+/**
+ * Display name for the body a filing is addressed to, in the citizen's
+ * language where we have one. Directory choices (ministry + authority text)
+ * are shown verbatim — they are the portal's own official names.
+ */
+export function caseAuthorityLabel(
+  file: Pick<CaseFile, "authorityId" | "authorityText" | "ministry">,
+  locale: string,
+): string {
+  const known = authorityById(file.authorityId);
+  if (known) return authorityName(known, locale);
+  return file.authorityText || file.ministry || "—";
+}
+
+/**
+ * Registration-number segment for a filing. Routable bodies use their real
+ * code; anything else derives one from its own name — `makeRef` sanitises it
+ * to five characters either way.
+ */
+export function caseAuthorityCode(
+  file: Pick<CaseFile, "authorityId" | "authorityText" | "ministry">,
+): string {
+  const known = authorityById(file.authorityId);
+  if (known) return known.code;
+  const raw = file.authorityText || file.ministry || "CENTL";
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return clean.slice(0, 5) || "CENTL";
+}
+
+/**
+ * Map a routable authority id to its directory position: the apex
+ * ministry/department heading, and the authority text under it. Used to
+ * pre-select the two filing dropdowns from a chat suggestion.
+ */
+export async function suggestDirectory(id: string): Promise<{
+  ministry: string;
+  authorityText: string;
+} | null> {
+  const known = authorityById(id);
+  if (!known) return null;
+  const { DIRECTORY } = await import("@/data/directory");
+  const norm = (s: string) =>
+    s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim();
+  // The body itself is an apex heading.
+  const apex = DIRECTORY.find((e) => e.routes === id);
+  if (apex) return { ministry: apex.name, authorityText: apex.name };
+  // Otherwise it sits under a heading as a named child.
+  const want = norm(known.name);
+  for (const entry of DIRECTORY) {
+    if (entry.children.some((c) => norm(c) === want)) {
+      return { ministry: entry.name, authorityText: known.name };
+    }
+  }
+  return null;
+}
+
+/** Find the apex heading a directory authority name sits under, if any. */
+export async function directoryParentFor(name: string): Promise<string | null> {
+  const { DIRECTORY } = await import("@/data/directory");
+  const hit = DIRECTORY.find((e) => e.children.includes(name));
+  return hit ? hit.name : null;
+}
+
 export function centralAuthorities(): Authority[] {
   return AUTHORITIES.filter((a) => a.scope === "central").sort((a, b) =>
     a.name.localeCompare(b.name),

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { axeScan, beginRequest, continueFromChat, watchConsole } from "./helpers";
+import { axeScan, beginRequest, continueFromChat, dismissGuidelines, watchConsole } from "./helpers";
 
 /**
  * The signed-in area: one menu, one set of credentials, and details typed once.
@@ -88,6 +88,7 @@ test("details are typed once and fill the request form", async ({ page }) => {
   await beginRequest(page, "How many passport applications were rejected last year?");
   await continueFromChat(page);
   await expect(page).toHaveURL(/\/en\/file$/);
+  await dismissGuidelines(page);
   await expect(page.getByLabel("Your name")).toHaveValue("R. Iyer");
   await expect(page.getByLabel("PIN code")).toHaveValue("560001");
 });
@@ -105,6 +106,7 @@ test("below the poverty line means no fee, and no payment screen to get wrong", 
 
   await beginRequest(page, "How many passports were issued in the last financial year?");
   await continueFromChat(page);
+  await dismissGuidelines(page);
   await page.getByLabel("Your name").fill("S. Devi");
   await page.getByLabel(/Email address/).fill("s.devi@example.org");
   await page.getByRole("button", { name: "Continue to payment" }).click();
@@ -135,6 +137,7 @@ test("history, tracking and appeals are one account, not four lookups", async ({
   await page.getByRole("button", { name: "Save and continue filing" }).click();
 
   await expect(page).toHaveURL(/\/en\/file$/);
+  await dismissGuidelines(page);
   await page.getByLabel(/Email address/).fill("a.citizen@example.org");
   await page.getByRole("button", { name: "Continue to payment" }).click();
   await page.getByRole("button", { name: /Pay ₹10 and file/ }).click();

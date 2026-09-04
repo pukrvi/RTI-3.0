@@ -1,5 +1,4 @@
 import Link from "next/link";
-import DashboardActions from "@/components/DashboardActions";
 import FilingCard from "@/components/FilingCard";
 import Icon from "@/components/Icon";
 import { getT } from "@/i18n";
@@ -15,6 +14,10 @@ import { currentSession } from "@/lib/session";
  * thirty. The six numbers are here, because people who have used the portal
  * look for them, but they sit below the two lists that matter: the most
  * recent filings first, then anything waiting on the citizen.
+ *
+ * Filing itself lives behind "File a new request" in the account menu — the
+ * action cards that used to top this page moved there, so nothing here
+ * competes with the lists.
  *
  * Every list on this page speaks the track card's language, shows the two
  * most recent filings, and then stops: a view link in the heading leads to
@@ -66,8 +69,6 @@ export default async function DashboardPage({
       <div>
         <h1 className="mb-0">{t("acct.dash.h1")}</h1>
       </div>
-
-      <DashboardActions locale={locale} />
 
       {showDraft && (
         <div className="callout callout-info">

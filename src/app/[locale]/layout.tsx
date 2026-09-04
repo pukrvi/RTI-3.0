@@ -91,14 +91,22 @@ export default async function LocaleLayout({
       <body>
         <div className="shell">
           <ChromeGate hiddenOn="/chat">
-          {/* One unified masthead: the mark anchors the left and spans both
-              rows. To its right, on wide screens the utility controls
-              (language, text size, contrast) sit top-right, with the task
-              menu and the login button on the row below. On narrow screens
-              the right side collapses to one stacked column. */}
+          {/* One unified masthead, full viewport width: the marks anchor the
+              left, the task menu sits centred in the middle, and the utility
+              controls with the login button pin to the right. On narrow
+              screens the zones wrap; the task menu itself moves to the
+              disclosure below. */}
           <header className="topbar">
-            <div className="page">
+            <div className="topbar-inner">
               <Link className="brand" href={`/${locale}`}>
+                <img
+                  className="emblem"
+                  src="/indian-emblam-white.png"
+                  alt=""
+                  width={371}
+                  height={537}
+                />
+                <span className="brand-divider" aria-hidden="true" />
                 <img
                   className="logo"
                   src="/RTO_3_logo.png"
@@ -108,6 +116,14 @@ export default async function LocaleLayout({
                 />
               </Link>
 
+              <MainNav
+                variant="desktop"
+                locale={locale}
+                navLabel={t("nav.label")}
+                menuLabel={t("nav.menu")}
+                currentLabel={t("nav.currentPage")}
+                items={navItems}
+              />
               <div className="topbar-side">
                 <TopActions
                   locale={locale}
@@ -133,20 +149,10 @@ export default async function LocaleLayout({
                     contrastOff: t("utility.contrastOff"),
                   }}
                 />
-                <div className="topbar-navrow">
-                  <MainNav
-                    variant="desktop"
-                    locale={locale}
-                    navLabel={t("nav.label")}
-                    menuLabel={t("nav.menu")}
-                    currentLabel={t("nav.currentPage")}
-                    items={navItems}
-                  />
-                  <Link className="btn btn-login" href={`/${locale}/${session ? "account" : "login"}`}>
-                    <Icon name="user" />
-                    {session ? t("auth.account") : t("auth.signIn")}
-                  </Link>
-                </div>
+                <Link className="btn btn-login" href={`/${locale}/${session ? "account" : "login"}`}>
+                  <Icon name="user" />
+                  {session ? t("auth.account") : t("auth.signIn")}
+                </Link>
               </div>
             </div>
           </header>

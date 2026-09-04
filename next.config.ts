@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // Keeps the dev overlay out of screenshots used for review and the video.
   devIndicators: false,
+  experimental: {
+    // The filing form accepts attachments up to 5 MB; the default 1 MB
+    // server-action limit would reject them with a bare 413 before the form's
+    // own validation can explain the limit. Anything over 5 MB is still
+    // refused by the action with the draft kept.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
 };
 
 export default nextConfig;

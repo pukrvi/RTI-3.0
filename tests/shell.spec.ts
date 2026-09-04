@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { axeScan, beginRequest, continueFromChat, nav, watchConsole } from "./helpers";
+import { axeScan, beginRequest, continueFromChat, dismissGuidelines, nav, watchConsole } from "./helpers";
 
 /**
  * The portal around the journey: the homepage, the header controls, the
@@ -122,6 +122,7 @@ test("a request filed while logged in appears in the account", async ({ page }) 
 
   // From here on the form is filled in from the account and the conversation.
   await expect(page).toHaveURL(/\/en\/file$/);
+  await dismissGuidelines(page);
   await expect(page.getByLabel("Your name")).toHaveValue("A. Citizen");
   await page.getByRole("button", { name: "Continue to payment" }).click();
   await page.getByRole("button", { name: /Pay ₹10 and file/ }).click();
@@ -208,9 +209,9 @@ test("the assistant opens directly in the chat, with a first-visit intro", async
   await page.goto("/en/ask/chat");
   await expect(page).toHaveURL(/\/en\/chat$/);
 
-  // And a way back out to the site.
+  // And a way back out to the site, pinned to the foot of the sidebar.
   await page.goto("/en/chat");
-  await page.locator(".wiz-bar").getByRole("link", { name: "Exit", exact: true }).first().click();
+  await page.locator(".wiz-side").getByRole("link", { name: "Back to main site", exact: true }).click();
   await expect(page).toHaveURL(/\/en$/);
 });
 
@@ -319,6 +320,7 @@ test("a tracking link can be read by anyone, but only changed by its owner", asy
 }) => {
   await beginRequest(page, "How many crop insurance claims were rejected?");
   await continueFromChat(page);
+  await dismissGuidelines(page);
   await page.getByLabel("Your name").fill("A. Citizen");
   await page.getByLabel(/Email address/).fill("someone@example.org");
   await page.getByRole("button", { name: "Continue to payment" }).click();

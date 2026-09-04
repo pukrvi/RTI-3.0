@@ -42,5 +42,5 @@ export const config = {
   // Public static assets (the masthead logo plus the usual suspects) are
   // served straight from /public and must not be locale-redirected, or the
   // request lands on /en/<file> and 404s.
-  matcher: ["/((?!_next/|icon.svg|favicon.ico|robots.txt|RTO_3_logo.png).*)"],
+  matcher: ["/((?!_next/|icon.svg|favicon.ico|robots.txt|RTO_3_logo.png|indian-emblam-white.png).*)"],
 };
