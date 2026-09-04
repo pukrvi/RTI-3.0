@@ -30,6 +30,7 @@ export interface ArchiveItem {
 
 export interface ArchiveLabels {
   searchLabel: string;
+  filters: string;
   placeholder: string;
   submit: string;
   all: string;
@@ -79,38 +80,54 @@ export default function ArchiveFinder({
 
   return (
     <>
-      <form className="card finder-search" action={`/${locale}/published`} role="search">
-        <div className="field mb-0">
-          <label htmlFor="q">{labels.searchLabel}</label>
-          <input
-            type="search"
-            id="q"
-            name="q"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={labels.placeholder}
-            autoComplete="off"
-            lang={locale}
-          />
+      <form
+        className="card finder-search finder-unified"
+        action={`/${locale}/published`}
+        role="search"
+      >
+        <div className="finder-main">
+          <div className="field mb-0">
+            <label htmlFor="q">{labels.searchLabel}</label>
+            <div className="finder-searchbox">
+              <input
+                type="search"
+                id="q"
+                name="q"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={labels.placeholder}
+                autoComplete="off"
+                lang={locale}
+              />
+              <button type="submit" className="btn">
+                {labels.submit}
+              </button>
+            </div>
+          </div>
+          <input type="hidden" name="type" value={type} />
         </div>
-        <button type="submit" className="visually-hidden">
-          {labels.submit}
-        </button>
-      </form>
 
-      <div className="tabs" role="group" aria-label={labels.searchLabel}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className="tab"
-            aria-pressed={type === tab.id}
-            onClick={() => setType(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        <div className="finder-divider" aria-hidden="true" />
+
+        <div className="finder-filters">
+          <span className="finder-filters-label" id="archive-filters">
+            {labels.filters}
+          </span>
+          <div className="tabs" role="group" aria-labelledby="archive-filters">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className="tab"
+                aria-pressed={type === tab.id}
+                onClick={() => setType(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </form>
 
       <p aria-live="polite" className="muted">
         {fill(labels.count, { n: results.length, total: items.length })}

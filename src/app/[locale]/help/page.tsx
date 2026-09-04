@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProcessJourney from "@/components/ProcessJourney";
 import { getT } from "@/i18n";
 
 /**
@@ -17,10 +18,16 @@ export default async function HelpPage({
   return (
     <main id="main">
       <div className="wrap stack-lg">
-        <div>
+        <div className="page-head">
           <h1>{t("help.h1")}</h1>
           <p>{t("help.intro")}</p>
         </div>
+
+        <section aria-labelledby="process-heading">
+          <h2 id="process-heading">{t("proc.h1")}</h2>
+          <p className="muted">{t("proc.lead")}</p>
+          <ProcessJourney locale={locale} />
+        </section>
 
         <section className="card" id="faq" aria-labelledby="faq-heading">
           <h2 id="faq-heading">{t("hp.faq")}</h2>

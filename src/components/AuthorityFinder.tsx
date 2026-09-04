@@ -108,26 +108,27 @@ export default function AuthorityFinder({
 
   return (
     <>
-      {/* Enter submits this even with no button and no JavaScript. */}
-      <form className="card finder-search" action={`/${locale}/authorities`} role="search">
+      {/* One search box: the button sits inside it. Enter submits too, so the
+          plain GET form still filters server-side with scripting off. */}
+      <form className="card finder-search finder-single" action={`/${locale}/authorities`} role="search">
         <div className="field mb-0">
-          <label htmlFor="q" className="visually-hidden">
-            {labels.searchLabel}
-          </label>
-          <input
-            type="search"
-            id="q"
-            name="q"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={labels.placeholder}
-            autoComplete="off"
-            lang={locale}
-          />
+          <label htmlFor="q">{labels.searchLabel}</label>
+          <div className="finder-searchbox">
+            <input
+              type="search"
+              id="q"
+              name="q"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={labels.placeholder}
+              autoComplete="off"
+              lang={locale}
+            />
+            <button type="submit" className="btn">
+              {labels.submit}
+            </button>
+          </div>
         </div>
-        <button type="submit" className="visually-hidden">
-          {labels.submit}
-        </button>
       </form>
 
       <div aria-live="polite" aria-busy={stale} className="visually-hidden">
@@ -199,7 +200,7 @@ export default function AuthorityFinder({
                     </p>
                   )}
                   <p className="small mb-0">
-                    <Link href={`/${locale}/ask`}>{labels.fileWith}</Link>
+                    <Link href={`/${locale}/chat`}>{labels.fileWith}</Link>
                   </p>
                 </div>
               </details>

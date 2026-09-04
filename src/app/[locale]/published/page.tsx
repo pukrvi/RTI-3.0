@@ -104,6 +104,7 @@ export default async function PublishedPage({
           initialType={type}
           labels={{
             searchLabel: t("arch.searchLabel"),
+            filters: t("arch.filters"),
             placeholder: t("arch.placeholder"),
             submit: t("top.search"),
             all: t("arch.all"),
@@ -122,7 +123,7 @@ export default async function PublishedPage({
         </section>
 
         <p>
-          <Link className="btn btn-secondary" href={`/${locale}/ask`}>
+          <Link className="btn btn-secondary" href={`/${locale}/chat`}>
             {t("arch.askInstead")}
           </Link>
         </p>

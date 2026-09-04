@@ -63,10 +63,11 @@ test("journey screenshots", async ({ page }, testInfo) => {
   await page.goto("/en/help");
   await shot("00e-help");
 
-  await page.goto("/en/ask");
+  await page.goto("/en/chat?intro=1");
+  await expect(page.getByRole("dialog")).toBeVisible();
   await shot("01-ask-intro");
 
-  await page.goto("/en/ask/chat");
+  await page.goto("/en/chat");
   await shot("01b-ask-chat");
 
   await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");

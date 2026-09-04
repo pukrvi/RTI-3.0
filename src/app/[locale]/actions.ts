@@ -73,7 +73,7 @@ async function requireCase(): Promise<CaseFile | null> {
 export async function askAssistant(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const question = str(form, "question");
-  if (!question) redirect(`/${locale}/ask/chat?error=empty`);
+  if (!question) redirect(`/${locale}/chat?error=empty`);
 
   let file = await requireCase();
   if (!file || file.filed) {
@@ -119,16 +119,16 @@ export async function askAssistant(form: FormData) {
     betterQuestion: read.betterQuestion,
   });
 
-  redirect(`/${locale}/ask/chat`);
+  redirect(`/${locale}/chat`);
 }
 
 /** Take the assistant's sharper wording instead of your own. */
 export async function useBetterQuestion(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const file = await requireCase();
-  if (!file?.betterQuestion) redirect(`/${locale}/ask/chat`);
+  if (!file?.betterQuestion) redirect(`/${locale}/chat`);
   await updateCase(file.id, { question: file.betterQuestion });
-  redirect(`/${locale}/ask/chat`);
+  redirect(`/${locale}/chat`);
 }
 
 /**
@@ -393,7 +393,7 @@ export async function restart(form: FormData) {
   const id = await readCaseId();
   if (id) await deleteCase(id);
   await clearCaseCookie();
-  redirect(str(form, "to") === "chat" ? `/${locale}/ask/chat` : `/${locale}`);
+  redirect(str(form, "to") === "chat" ? `/${locale}/chat` : `/${locale}`);
 }
 
 /* ------------------------------------------------- display preferences ----

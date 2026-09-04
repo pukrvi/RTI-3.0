@@ -12,16 +12,17 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   await page.goto("/en");
 
   // The primary control is the citizen's own question.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+  await expect(page.getByRole("heading", { level: 1 }).first()).toHaveText(
     "File a Right to Information request",
   );
-  // Three ways in, none of them a form on the homepage.
-  await expect(page.getByRole("link", { name: /Search the available records/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /File RTI Request/ })).toBeVisible();
+  // Two ways in on the first panel, none of them a form on the homepage.
+  await expect(page.getByRole("link", { name: "File a request", exact: true })).toBeVisible();
+  // The assistant gets the second panel, with the only way to open it.
+  await expect(page.getByRole("link", { name: "Ask RTI Mitra" })).toBeVisible();
 
   // Timeline and rights — none of which appear on the live homepage.
   await expect(page.getByRole("heading", { name: "Fees and timelines" }).first()).toBeVisible();
-  await expect(page.getByText("30 days", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("30 Days to answer", { exact: true }).first()).toBeVisible();
   await expect(page.locator(".stat")).toHaveCount(6);
 
   // The process as three expandable text cards, not a raster flowchart, and
@@ -33,10 +34,15 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   await expect(page.getByRole("heading", { name: "What cannot be filed here" })).toBeVisible();
   await expect(page.locator(".scope").getByText(/Land records, ration cards/)).toBeVisible();
 
-  // Three panels in the gallery, and the Act itself is one click away.
-  await expect(page.locator(".slide")).toHaveCount(3);
-  const act = page.getByRole("link", { name: /Read the RTI Act/ });
-  await expect(act).toHaveAttribute("href", "https://rti.dopt.gov.in/rtiact.html");
+  // Four panels in the gallery, and the Act itself sits in the header,
+  // between Published information and Help.
+  await expect(page.locator(".slide")).toHaveCount(4);
+  const act = page.locator('header nav.mainnav ul li a[href="https://rti.dopt.gov.in/rtiact.html"]');
+  await expect(act).toHaveText("RTI Act");
+  const navLabels = await page.locator("header nav.mainnav ul li").allTextContents();
+  const at = (s: string) => navLabels.findIndex((t) => t.includes(s));
+  expect(at("Published information")).toBeLessThan(at("RTI Act"));
+  expect(at("RTI Act")).toBeLessThan(at("Help"));
 
   // The step cards open when asked, with the statutory timeline inside.
   await page.locator("details.how").nth(2).locator("summary").click();
@@ -169,39 +175,43 @@ test("text size and high contrast are set on the server and persist", async ({ p
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "normal");
 });
 
-test("the assistant opens on a disclosure screen, then runs full screen", async ({
+test("the assistant opens directly in the chat, with a first-visit intro", async ({
   page,
 }) => {
-  await page.goto("/en/ask");
-
-  // The disclosure screen is an ordinary page: site header and footer,
-  // like everywhere else. Only the chat is a tool.
-  // (The nav class differs by viewport: .mainnav desktop, .navmenu mobile.)
-  await expect(page.locator(".topbar")).toBeVisible();
-  await expect(page.locator(".mainnav:visible, .navmenu:visible")).toBeVisible();
-  await expect(page.locator(".site-footer")).toBeVisible();
-  await axeScan(page, "assistant intro");
-
-  // It says what it does before you start.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hello,");
-  await expect(page.getByText(/RTI Mitra reads your question/)).toBeVisible();
-
-  const begin = page.getByRole("link", { name: "Begin" });
-  await expect(begin).toBeVisible();
-
-  await begin.click();
-  await expect(page).toHaveURL(/\/en\/ask\/chat$/);
+  await page.goto("/en/chat?intro=1");
 
   // The chat itself runs full screen: no site header or footer.
   await expect(page.locator(".mainnav")).toHaveCount(0);
   await expect(page.locator(".site-footer")).toHaveCount(0);
-  const back = page.locator(".wiz-bar").getByRole("link", { name: "Back", exact: true });
-  await expect(back).toBeVisible();
   await axeScan(page, "assistant");
 
+  // First visit: the old intro page arrives as a pop-up over the chat, with
+  // the essential words emphasised.
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("heading", { level: 2 })).toHaveText("Hello,");
+  await expect(dialog.getByText(/RTI Mitra reads your question/)).toBeVisible();
+  await expect(dialog.locator("strong", { hasText: "2,581" })).toBeVisible();
+  await axeScan(page, "assistant intro");
+
+  // Dismissing it lands straight in the conversation, and it stays dismissed.
+  await dialog.getByRole("button", { name: "Begin" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("RTI Mitra");
+  await expect(
+    page.getByRole("button", { name: "What does this tool do?" }),
+  ).toBeVisible();
+
+  // The retired intro URLs redirect to the chat.
+  await page.goto("/en/ask");
+  await expect(page).toHaveURL(/\/en\/chat$/);
+  await page.goto("/en/ask/chat");
+  await expect(page).toHaveURL(/\/en\/chat$/);
+
   // And a way back out to the site.
-  await back.click();
-  await expect(page).toHaveURL(/\/en\/ask$/);
+  await page.goto("/en/chat");
+  await page.locator(".wiz-bar").getByRole("link", { name: "Exit", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/en$/);
 });
 
 test("the header holds only language and accessibility", async ({ page }) => {
@@ -265,10 +275,10 @@ test("the authority list filters as you type", async ({ page }) => {
   await expect(page.getByText(/94 of 94 ministries and departments/)).toBeVisible();
   await expect(page.getByText(/2581 bodies in the full list/)).toBeVisible();
 
-  // No search button, no clear button, no A–Z strip.
-  // The submit button exists only so that Enter works without JavaScript.
+  // The Search button sits inside the search box, after the published
+  // archive. No separate clear button, no A–Z strip.
   await expect(page.locator("main").getByRole("button", { name: "Search" })).toHaveClass(
-    /visually-hidden/,
+    /btn/,
   );
   await expect(page.locator(".az")).toHaveCount(0);
 

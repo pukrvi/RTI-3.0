@@ -46,11 +46,14 @@ export async function generateMetadata({
  * the same — FOIA.gov keeps `Agency login` off the end of the nav, and
  * WhatDoTheyKnow puts `Sign in or sign up` in the utility row.
  */
-const NAV = [
+const RTI_ACT_URL = "https://rti.dopt.gov.in/rtiact.html";
+
+const NAV: { section: string; href: string; key: string; external?: boolean }[] = [
   { section: "", href: "", key: "nav.home" },
-  { section: "ask", href: "/ask", key: "nav.search" },
+  { section: "chat", href: "/chat", key: "nav.search" },
   { section: "authorities", href: "/authorities", key: "nav.pa" },
   { section: "published", href: "/published", key: "nav.published" },
+  { section: "act", href: RTI_ACT_URL, key: "nav.act", external: true },
   { section: "help", href: "/help", key: "nav.helpFaq" },
   { section: "contact", href: "/contact", key: "nav.contact" },
 ];
@@ -71,10 +74,11 @@ export default async function LocaleLayout({
     currentSession(),
   ]);
 
-  const navItems = NAV.map(({ section, href, key }) => ({
+  const navItems = NAV.map(({ section, href, key, external }) => ({
     section,
     href,
     label: t(key),
+    ...(external ? { external: true as const } : {}),
   }));
 
   return (
@@ -86,7 +90,7 @@ export default async function LocaleLayout({
     >
       <body>
         <div className="shell">
-          <ChromeGate hiddenOn="/ask/chat">
+          <ChromeGate hiddenOn="/chat">
           {/* One unified masthead: the mark anchors the left and spans both
               rows. To its right, on wide screens the utility controls
               (language, text size, contrast) sit top-right, with the task
@@ -160,7 +164,7 @@ export default async function LocaleLayout({
 
           {children}
 
-          <ChromeGate hiddenOn="/ask/chat">
+          <ChromeGate hiddenOn="/chat">
             <SiteFooter t={t} locale={locale} />
           </ChromeGate>
         </div>
