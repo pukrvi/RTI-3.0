@@ -156,10 +156,11 @@ test("history, tracking and appeals are one account, not four lookups", async ({
 
   // Push the demo clock past thirty days and the appeal offers itself, with
   // the closing date on it — neither of which the live portal ever tells you.
-  // The card itself is the way in — there is no Open button.
+  // The card itself is the way in — there is no Open button — and it stays
+  // inside the account, beside the menu.
   await page.goto("/en/account/track");
   await page.getByRole("link", { name: /MGNREGA wage payments/ }).first().click();
-  await page.waitForURL(/\/en\/track\//);
+  await page.waitForURL(/\/en\/account\/track\//);
   await page.getByRole("button", { name: "Jump past the deadline" }).click();
   await expect(page.getByText(/Clock moved forward 31 days/)).toBeVisible();
   await page.goto("/en/account/appeals");

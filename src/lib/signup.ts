@@ -26,6 +26,8 @@ export interface SignupState {
   /** Last 4 of the demo Aadhaar number used, once verified. */
   aadhaarLast4?: string;
   aadhaarVerified?: boolean;
+  /** Where to land after the account is created (e.g. back to filing). */
+  next?: string;
 }
 
 export async function getSignup(): Promise<SignupState | null> {

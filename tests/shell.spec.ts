@@ -16,7 +16,10 @@ test("homepage leads with the question, and with a way back in", async ({ page }
     "File a Right to Information request",
   );
   // Two ways in on the first panel, none of them a form on the homepage.
-  await expect(page.getByRole("link", { name: "File a request", exact: true })).toBeVisible();
+  // Primary goes to the chat (no login needed to ask); manual filing asks
+  // for login at the form.
+  await expect(page.getByRole("link", { name: "File with RTI Mitra AI", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "File RTI manually", exact: true })).toBeVisible();
   // The assistant gets the second panel, with the only way to open it.
   await expect(page.getByRole("link", { name: "Ask RTI Mitra" })).toBeVisible();
 
@@ -35,7 +38,8 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   await expect(page.locator(".scope").getByText(/Land records, ration cards/)).toBeVisible();
 
   // Four panels in the gallery, and the Act itself sits in the header,
-  // between Published information and Help.
+  // between Published information and Help. Contact closes the menu; Mitra
+  // lives beside login, not in the menu.
   await expect(page.locator(".slide")).toHaveCount(4);
   const act = page.locator('header nav.mainnav ul li a[href="https://rti.dopt.gov.in/rtiact.html"]');
   await expect(act).toHaveText("RTI Act");
@@ -43,6 +47,19 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   const at = (s: string) => navLabels.findIndex((t) => t.includes(s));
   expect(at("Published information")).toBeLessThan(at("RTI Act"));
   expect(at("RTI Act")).toBeLessThan(at("Help"));
+  expect(at("Help")).toBeLessThan(at("Contact"));
+  expect(at("Chat with Mitra AI")).toBe(-1);
+  expect(at("Search records")).toBe(-1);
+
+  // The Mitra call-to-action sits immediately before login and stands the
+  // same height as it — same button box, different paint.
+  const cta = page.locator(".topbar-cta").getByRole("link", { name: /Chat with Mitra AI/ });
+  const login = page.locator(".topbar-cta").getByRole("link", { name: "Login" });
+  await expect(cta).toBeVisible();
+  await expect(cta).toHaveAttribute("href", /\/en\/chat$/);
+  const ctaBox = await cta.boundingBox();
+  const loginBox = await login.boundingBox();
+  expect(ctaBox && loginBox ? Math.abs(ctaBox.height - loginBox.height) : -1).toBeLessThanOrEqual(1);
 
   // The step cards open when asked, with the statutory timeline inside.
   await page.locator("details.how").nth(2).locator("summary").click();
@@ -59,7 +76,6 @@ test("the live portal's own menu items are all reachable", async ({ page }) => {
   await page.goto("/en");
   const menu = await nav(page).open();
   for (const name of [
-    "Search records",
     "List of Authorities",
     "Published information",
     "Help & FAQ",
@@ -67,6 +83,11 @@ test("the live portal's own menu items are all reachable", async ({ page }) => {
   ]) {
     await expect(menu.getByRole("link", { name })).toBeVisible();
   }
+  // Mitra is not a menu item: it is the colourful call-to-action beside login.
+  await expect(menu.getByRole("link", { name: /Chat with Mitra AI/ })).toHaveCount(0);
+  const mitra = page.locator(".topbar-cta").getByRole("link", { name: /Chat with Mitra AI/ });
+  await expect(mitra).toBeVisible();
+  await expect(mitra).toHaveAttribute("href", /\/en\/chat$/);
   // Sign-in sits at the end of the nav, not in the middle of the task list.
   await page.locator(".topbar").getByRole("link", { name: "Login" }).click();
   await expect(page).toHaveURL(/\/en\/login$/);
@@ -318,17 +339,40 @@ test("a tracking link can be read by anyone, but only changed by its owner", asy
   page,
   browser,
 }) => {
+  // Filing needs an account since the hero-CTAs change; sign in first with a
+  // fresh contact so the one-time details gate is predictable.
+  const contact = `track-${Date.now()}@example.org`;
+  await page.goto("/en/login");
+  await page.getByLabel("Email ID").fill(contact);
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/account$/);
+
   await beginRequest(page, "How many crop insurance claims were rejected?");
   await continueFromChat(page);
+  await expect(page).toHaveURL(/\/en\/file\/details$/);
+  await page.getByLabel("Full name").fill("A. Citizen");
+  await page.getByLabel("Address line 1").fill("12 Station Road");
+  await page.getByLabel("PIN code").fill("110001");
+  await page.getByRole("button", { name: "Save and continue filing" }).click();
+  await expect(page).toHaveURL(/\/en\/file$/);
   await dismissGuidelines(page);
-  await page.getByLabel("Your name").fill("A. Citizen");
-  await page.getByLabel(/Email address/).fill("someone@example.org");
+  // The router suggests an authority when it recognises the question; when it
+  // does not, the citizen picks — this test is about the tracking link, not
+  // the matcher, so choose explicitly rather than depending on it.
+  if ((await page.locator("#ministry-select").inputValue()) === "") {
+    await page.locator("#ministry-select").selectOption("Department of Agriculture, Cooperation & Farmers Welfare");
+    await page.locator("#authority-select").selectOption("Department of Agriculture, Cooperation & Farmers Welfare");
+  }
   await page.getByRole("button", { name: "Continue to payment" }).click();
   await page.getByRole("button", { name: /Pay ₹10 and file/ }).click();
   await page.waitForURL(/\/file\/done$/);
   await page.getByRole("link", { name: "Track this request" }).click();
   await page.waitForURL(/\/track\//);
-  const url = page.url();
+  // Signed-in filings land inside the account shell; the shareable link is
+  // the same case id on the public track page.
+  const accountUrl = page.url();
+  const url = accountUrl.replace("/account/track/", "/track/");
   const ref = ((await page.locator(".refno").first().textContent()) ?? "").trim();
   await expect(page.getByText("30 days left")).toBeVisible();
 
@@ -342,11 +386,8 @@ test("a tracking link can be read by anyone, but only changed by its owner", asy
   await stranger.close();
 
   // And it can be found again from the registration number alone, from the account.
-  await page.goto("/en/login");
-  await page.getByLabel("Email ID").fill("someone@example.org");
-  await page.getByLabel("Password").fill("Rti@2026");
-  await page.getByRole("button", { name: "Sign In", exact: true }).click();
-  await page.getByRole("link", { name: "Track status" }).click();
+  // Already signed in above, so go straight to the account's track page.
+  await page.goto("/en/account/track");
   await page.getByLabel("Registration number").fill(ref);
   await page.getByRole("button", { name: "Find it" }).click();
   await expect(page.locator(".refno").first()).toHaveText(ref);

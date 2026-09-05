@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getT } from "@/i18n";
 import { currentSession } from "@/lib/session";
+import { safeNext } from "@/lib/redirect";
 import { signInWithPassword, startAadhaarLogin } from "../actions";
 
 /**
@@ -28,12 +29,15 @@ export default async function LoginPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale } = await params;
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const t = getT(locale);
 
-  if (await currentSession()) redirect(`/${locale}/account`);
+  const rawNext = typeof next === "string" ? next : "";
+  const dest = rawNext ? safeNext(rawNext, locale) : `/${locale}/account`;
+  if (await currentSession()) redirect(dest);
 
   const code = CODES[Math.floor(Math.random() * CODES.length)];
+  const needsLoginToFile = dest.includes("/file") || dest.includes("/pay");
 
   return (
     <main id="main">
@@ -49,8 +53,15 @@ export default async function LoginPage({
               <p className="mb-0">{t("auth.login.demo")}</p>
             </div>
 
+            {needsLoginToFile && (
+              <div className="callout callout-info mt-1" role="note">
+                <p className="mb-0">{t("auth.login.requiredToFile")}</p>
+              </div>
+            )}
+
             <form action={signInWithPassword} className="mt-1">
               <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="next" value={dest} />
               <div className={`field ${error === "contact" ? "field-error" : ""}`}>
                 <label htmlFor="contact">{t("auth.login.email")}</label>
                 <input
@@ -101,7 +112,7 @@ export default async function LoginPage({
                   </div>
                   <Link
                     className="captcha-refresh"
-                    href={`/${locale}/login`}
+                    href={rawNext ? `/${locale}/login?next=${encodeURIComponent(dest)}` : `/${locale}/login`}
                     aria-label={t("auth.login.refresh")}
                     title={t("auth.login.refresh")}
                   >
@@ -121,6 +132,7 @@ export default async function LoginPage({
 
             <form action={startAadhaarLogin}>
               <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="next" value={dest} />
               <button type="submit" className="btn btn-secondary btn-block">
                 <Icon name="id" />
                 {t("auth.login.aadhaar")}
@@ -129,7 +141,7 @@ export default async function LoginPage({
 
             <p className="create-line muted mb-0">
               {t("auth.login.newHere")}{" "}
-              <Link href={`/${locale}/signup`}>{t("auth.login.createAccount")}</Link>
+              <Link href={rawNext ? `/${locale}/signup?next=${encodeURIComponent(dest)}` : `/${locale}/signup`}>{t("auth.login.createAccount")}</Link>
             </p>
           </div>
 

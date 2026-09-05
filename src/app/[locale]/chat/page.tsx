@@ -19,7 +19,7 @@ import { askAssistant, continueToRouting, restart } from "../actions";
  * the answer is already published or was already released to somebody else,
  * and stop you before payment when the subject belongs to a State department.
  *
- * There is no separate intro page: "Search records" in the nav lands here
+ * There is no separate intro page: "Chat with Mitra AI" in the header lands here
  * directly. What the intro page used to say now arrives as a first-visit
  * pop-up over this chat (see ChatIntroDialog) — `**markers**` in the `wiz.p*`
  * dictionary strings decide which words land in <strong>.

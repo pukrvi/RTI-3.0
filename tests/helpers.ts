@@ -59,14 +59,39 @@ export async function beginRequest(
  * The way out of the assistant is the filing form itself: the conversation
  * carries the question and the suggested authority onto a single page.
  * (A signed-in citizen without saved details passes through /file/details
- * first, which the prefix match also allows for.)
+ * first, which the prefix match also allows for. A signed-out citizen is
+ * asked to log in first and lands back on the form afterwards.)
  */
 export async function continueFromChat(page: Page, locale = "en") {
   const names = locale === "hi"
     ? /फिर भी आरटीआई आवेदन करें|यह आवेदन दायर करें/
     : /File an RTI anyway|File this request/;
   await page.getByRole("button", { name: names }).click();
-  await page.waitForURL(new RegExp(`/${locale}/file`));
+  await page.waitForURL(new RegExp(`/${locale}/(file|login)`));
+}
+
+/**
+ * Filing now needs an account; chatting does not. After leaving the chat a
+ * signed-out citizen lands on /login?next=… — sign in there and continue to
+ * the form. Already signed in: no-op.
+ *
+ * Note the `?next=/en/file` query means "contains /file" matches the login
+ * page itself, so this waits for leaving /login — not for /file. A fresh
+ * account lands on /file/details first (the one-time profile step), not /file.
+ */
+export async function loginIfNeeded(
+  page: Page,
+  contact = `e2e-${Date.now()}@example.org`,
+  locale = "en",
+) {
+  if (!new URL(page.url()).pathname.includes("/login")) return;
+  const emailLabel = locale === "hi" ? "ईमेल आईडी" : "Email ID";
+  const passLabel = locale === "hi" ? "पासवर्ड" : "Password";
+  const signInName = locale === "hi" ? "साइन इन करें" : "Sign In";
+  await page.getByLabel(emailLabel).fill(contact);
+  await page.getByLabel(passLabel).fill("Rti@2026");
+  await page.getByRole("button", { name: signInName, exact: true }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/login"));
 }
 
 /**

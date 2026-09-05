@@ -10,12 +10,26 @@ import { beginRequest, continueFromChat } from "./helpers";
  * the bundle. If these fail, the prototype has quietly become a single-page app.
  */
 test("the whole journey works with scripting disabled", async ({ page }) => {
+  // Filing needs an account; chatting does not. Sign in first so the chat's
+  // draft carries straight onto the form after the login gate.
+  await page.goto("/en/login");
+  await page.getByLabel("Email ID").fill(`nojs-${Date.now()}@example.org`);
+  await page.getByLabel("Password").fill("Rti@2026");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+  await page.waitForURL(/\/en\/account$/);
+
   await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
   await expect(page.locator(".msg-bot")).toHaveCount(1);
 
   await expect(page.getByText(/MGNREGA wage payment status/)).toBeVisible();
   await continueFromChat(page);
-  await page.waitForURL(/\/file$/);
+  // First filing for a fresh account: the one-time details step.
+  await page.waitForURL(/\/en\/file\/details/);
+  await page.getByLabel("Full name").fill("A. Citizen");
+  await page.getByLabel("Address line 1").fill("12 Station Road");
+  await page.getByLabel("PIN code").fill("110001");
+  await page.getByRole("button", { name: "Save and continue filing" }).click();
+  await page.waitForURL(/\/en\/file$/);
 
   await expect(page.locator("#ministry-select")).not.toHaveValue("");
   await expect(page.locator("#authority-select option:checked")).toContainText(

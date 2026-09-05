@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { axeScan, beginRequest, continueFromChat, dismissGuidelines, watchConsole } from "./helpers";
+import { axeScan, beginRequest, continueFromChat, dismissGuidelines, loginIfNeeded, watchConsole } from "./helpers";
 
 /**
  * The whole citizen journey, end to end, on a phone-sized screen and a desktop.
@@ -34,10 +34,21 @@ test.describe("pre-filing journey", () => {
     await expect(page.getByRole("button", { name: "File an RTI anyway" })).toBeVisible();
     await axeScan(page, "step 1 ask");
     await continueFromChat(page);
+    // Filing needs an account; chatting did not. Sign in at the gate and
+    // land back on the form with the conversation's draft intact.
+    await loginIfNeeded(page);
 
     // 2 — One page for the whole application, filled in from the conversation:
     // the authority it worked out, the question, the letter started.
-    await expect(page).toHaveURL(/\/en\/file$/);
+    // Fresh account: the one-time details step comes first.
+    if (/\/file\/details/.test(page.url())) {
+      await page.getByLabel("Full name").fill("A. Citizen");
+      await page.getByLabel("Address line 1").fill("12 Station Road");
+      await page.getByLabel("PIN code").fill("110001");
+      await page.getByRole("button", { name: "Save and continue filing" }).click();
+    }
+    // Pathname, not the full URL: /login?next=/en/file ends in "/en/file" too.
+    await expect.poll(async () => new URL(page.url()).pathname).toBe("/en/file");
     await dismissGuidelines(page);
     await expect(page.locator("#ministry-select")).not.toHaveValue("");
     await expect(page.locator("#authority-select")).not.toHaveValue("");
@@ -71,26 +82,30 @@ test.describe("pre-filing journey", () => {
     await page.getByRole("link", { name: "Track this request" }).click();
 
     // 5 — Track. The statutory clock is computed and shown.
-    await expect(page).toHaveURL(/\/en\/track\//);
+    await expect(page).toHaveURL(/\/en\/(account\/)?track\//);
     const ref = ((await page.locator(".refno").first().textContent()) ?? "").trim();
     expect(ref).toMatch(REF);
     await expect(page.getByText("30 days left")).toBeVisible();
-    await expect(page.getByText(/Reply due by/)).toBeVisible();
+    // The due date lives in the summary rail beside the clock, not inside it.
+    await expect(page.getByText("Reply due", { exact: true })).toBeVisible();
     await axeScan(page, "track");
 
     await page.getByRole("button", { name: "Jump past the deadline" }).click();
     await expect(page.getByText(/days overdue/)).toBeVisible();
     await expect(page.getByText("You can appeal")).toBeVisible();
+    // The appeal window date sits in the summary rail too.
+    await expect(page.getByText("Appeal by", { exact: true })).toBeVisible();
+    await expect(page.getByText(/Appeal window closes on/)).toBeVisible();
 
     // 7 — Appeal, prefilled, inside the window.
     await page.getByRole("link", { name: "Prepare my appeal" }).click();
-    await expect(page).toHaveURL(/\/en\/appeal\//);
+    await expect(page).toHaveURL(/\/en\/(account\/)?appeal\//);
     await expect(page.getByLabel("Ground for appeal")).toHaveValue("no-response");
     expect(await page.getByLabel(/Your appeal, in full/).inputValue()).toContain(ref);
     await axeScan(page, "appeal");
     await page.getByRole("button", { name: /File the appeal/ }).click();
 
-    await expect(page).toHaveURL(/\/en\/track\//);
+    await expect(page).toHaveURL(/\/en\/(account\/)?track\//);
     await expect(page.getByText("First appeal filed").first()).toBeVisible();
 
     expect(problems, problems.join("\n")).toHaveLength(0);
@@ -125,7 +140,15 @@ test.describe("pre-filing journey", () => {
     await expect(page.getByText(/ईपीएफओ/).first()).toBeVisible();
     await axeScan(page, "hindi chat");
     await continueFromChat(page, "hi");
-    await expect(page).toHaveURL(/\/hi\/file$/);
+    await loginIfNeeded(page, `e2e-${Date.now()}@example.org`, "hi");
+    // Fresh account: the one-time details step comes first.
+    if (/\/file\/details/.test(page.url())) {
+      await page.getByLabel("पूरा नाम").fill("क. नागरिक");
+      await page.getByLabel("पता पंक्ति 1").fill("12 स्टेशन रोड");
+      await page.getByLabel("पिन कोड").fill("110001");
+      await page.getByRole("button", { name: "सहेजें और आवेदन जारी रखें" }).click();
+    }
+    await expect.poll(async () => new URL(page.url()).pathname).toBe("/hi/file");
 
     expect(problems, problems.join("\n")).toHaveLength(0);
   });
@@ -133,8 +156,16 @@ test.describe("pre-filing journey", () => {
   test("Devanagari survives all the way to the filed request", async ({ page }) => {
     await beginRequest(page, "मेरे जिले में मनरेगा की कितनी मजदूरी लंबित है?", "hi");
     await continueFromChat(page, "hi");
+    await loginIfNeeded(page, `e2e-${Date.now()}@example.org`, "hi");
 
-    await expect(page).toHaveURL(/\/hi\/file$/);
+    // Fresh account: the one-time details step comes first.
+    if (/\/file\/details/.test(page.url())) {
+      await page.getByLabel("पूरा नाम").fill("क. नागरिक");
+      await page.getByLabel("पता पंक्ति 1").fill("12 स्टेशन रोड");
+      await page.getByLabel("पिन कोड").fill("110001");
+      await page.getByRole("button", { name: "सहेजें और आवेदन जारी रखें" }).click();
+    }
+    await expect.poll(async () => new URL(page.url()).pathname).toBe("/hi/file");
     await dismissGuidelines(page);
     await page.getByLabel("आपका नाम").fill("क. नगरिक");
     await page.getByLabel("ईमेल पता").fill("someone@example.org");

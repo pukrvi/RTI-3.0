@@ -37,7 +37,7 @@ export default function FilingCard({
 }) {
   const { file, clock, authority } = item;
   const now = effectiveNow(file.clockOffsetDays);
-  const href = `/${locale}/track/${file.id}`;
+  const href = `/${locale}/account/track/${file.id}`;
 
   // Share of the thirty days used, clamped. Purely decorative: the days and
   // the date are both written out beside it.

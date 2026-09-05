@@ -75,27 +75,108 @@ test("demo account shows eight seeded requests in every state", async ({
 
 test("demo seeds resolve by registration number and open read-only", async ({
   page,
+  browser,
 }) => {
   const problems = watchConsole(page);
   await loginDemo(page);
 
   // Read one seeded registration number out of history, then find it through
   // the lookup box — the ref index fallback resolving without any stored ref.
+  // The hit opens beside the account menu, not on the standalone layout.
   await page.goto("/en/account/history");
   const ref = ((await page.locator(".refno").first().textContent()) ?? "").trim();
   expect(ref).toMatch(/\//);
   await page.goto("/en/account/track");
   await page.getByLabel("Registration number").fill(ref);
   await page.getByRole("button", { name: "Find it" }).click();
-  await page.waitForURL(/\/en\/track\/demo-/);
-  await expect(page.getByText("Seeded demo record")).toBeVisible();
+  await page.waitForURL(/\/en\/account\/track\/demo-/);
+  await expect(page.locator(".refno").first()).toHaveText(ref);
+  await expect(
+    page
+      .getByRole("navigation", { name: "Account menu" })
+      .getByRole("link", { name: "Track status" }),
+  ).toBeVisible();
+
+  // Seeds are read-only inside the account too: no demo clock to move.
+  await expect(
+    page.getByRole("button", { name: "Jump past the deadline" }),
+  ).toHaveCount(0);
+  await expect(page.getByText("Seeded demo record")).toHaveCount(0);
 
   // The refused seed shows its refusal; the long-answered dopt seed shows
   // its supplied reply.
-  await page.goto("/en/track/demo-r6-cbdt");
+  await page.goto("/en/account/track/demo-r6-cbdt");
   await expect(page.getByText("Information refused")).toBeVisible();
-  await page.goto("/en/track/demo-r8-dopt");
+  await page.goto("/en/account/track/demo-r8-dopt");
   await expect(page.getByText("Information supplied")).toBeVisible();
+  // Answered long ago, so the appeal window has shut: no button, but the
+  // page still names the date it closed — in the body and in the rail.
+  await expect(page.getByText(/Appeal window closed on/)).toHaveCount(2);
+
+  // The standalone tracking link still explains itself to an anonymous
+  // visitor: the seed is read-only there, and says so.
+  const anon = await browser.newContext();
+  const anonPage = await anon.newPage();
+  await anonPage.goto("/en/track/demo-r6-cbdt");
+  await expect(anonPage.getByText("Seeded demo record")).toBeVisible();
+  await anon.close();
+
+  expect(problems, problems.join("\n")).toEqual([]);
+});
+
+test("every seeded state shows the same rail, in the same order", async ({
+  page,
+}) => {
+  const problems = watchConsole(page);
+  await loginDemo(page);
+
+  const base = ["Status", "Registration number", "With", "Filed on", "Reply due"];
+  const cases: Array<[string, string[]]> = [
+    ["demo-r1-nh48", base],
+    ["demo-r2-railrefund", base],
+    ["demo-r3-passport", [...base, "Appeal by"]],
+    ["demo-r4-epfo", [...base, "First appeal"]],
+    ["demo-r5-mgnrega", [...base, "First appeal"]],
+    ["demo-r6-cbdt", [...base, "Appeal by"]],
+    ["demo-r7-toll", [...base, "First appeal", "Decision by"]],
+    ["demo-r8-dopt", [...base, "First appeal"]],
+  ];
+
+  for (const [id, titles] of cases) {
+    await page.goto(`/en/account/track/${id}`);
+    const rail = page.locator(".rail-card");
+    await expect(rail).toBeVisible();
+    // One style everywhere: no heading inside the card, every grey title
+    // stacked over its value, status first.
+    await expect(rail.locator("h2")).toHaveCount(0);
+    await expect(rail.locator("dt")).toHaveText(titles);
+  }
+
+  expect(problems, problems.join("\n")).toEqual([]);
+});
+
+test("an appealed request runs the decision clock, reply last", async ({
+  page,
+}) => {
+  const problems = watchConsole(page);
+  await loginDemo(page);
+  await page.goto("/en/account/track/demo-r7-toll");
+
+  // The CPIO's thirty days are over and done: no negative reply count, the
+  // live figure is the FAA's thirty days to decide.
+  await expect(page.getByText(/-\d+ days left/)).toHaveCount(0);
+  await expect(page.getByText(/must decide by/)).toBeVisible();
+
+  // Appeal status first, the authority's reply after the citizen's question.
+  const ids = await page
+    .locator(".detail-grid > .stack > section")
+    .evaluateAll((els) =>
+      els.map(
+        (el) => el.getAttribute("aria-labelledby") ?? el.getAttribute("aria-label") ?? "",
+      ),
+    );
+  expect(ids[0]).toBe("appeal-heading");
+  expect(ids.indexOf("reply-heading")).toBeGreaterThan(ids.indexOf("asked-heading"));
 
   expect(problems, problems.join("\n")).toEqual([]);
 });

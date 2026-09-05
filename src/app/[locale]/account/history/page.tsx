@@ -70,7 +70,7 @@ export default async function HistoryPage({
               {items.map((item) => (
                 <tr key={item.file.id}>
                   <th scope="row">
-                    <Link className="refno" href={`/${locale}/track/${item.file.id}`}>
+                    <Link className="refno" href={`/${locale}/account/track/${item.file.id}`}>
                       {item.file.filed?.ref}
                     </Link>
                     {item.file.appeal && (

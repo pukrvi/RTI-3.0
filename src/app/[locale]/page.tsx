@@ -70,13 +70,13 @@ export default async function HomePage({
                     <h1>{t("hp.h1")}</h1>
                     <p className="lead">{t("hp.lead")}</p>
                     <div className="hero-actions">
-                      <Link className="btn" href={`/${locale}/file`}>
-                        <Icon name="act" />
-                        {t("nav.file")}
+                      <Link className="btn" href={`/${locale}/chat`}>
+                        <Icon name="chat" />
+                        {t("hero.fileWithMitra")}
                       </Link>
-                      <Link className="btn btn-secondary" href={`/${locale}/appeal`}>
-                        <Icon name="appeal" />
-                        {t("hero.fileAppeal")}
+                      <Link className="btn btn-secondary" href={`/${locale}/file`}>
+                        <Icon name="file" />
+                        {t("hero.fileManually")}
                       </Link>
                     </div>
                   </>

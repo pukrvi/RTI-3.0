@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getT } from "@/i18n";
 import { currentSession, pendingSession } from "@/lib/session";
+import { safeNext } from "@/lib/redirect";
 import { verifyCode } from "../../actions";
 
 /**
@@ -25,12 +26,14 @@ export default async function CodePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale } = await params;
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const t = getT(locale);
 
-  if (await currentSession()) redirect(`/${locale}/account`);
+  const rawNext = typeof next === "string" ? next : "";
+  const dest = rawNext ? safeNext(rawNext, locale) : `/${locale}/account`;
+  if (await currentSession()) redirect(dest);
   const pending = await pendingSession();
-  if (!pending) redirect(`/${locale}/login`);
+  if (!pending) redirect(rawNext ? `/${locale}/login?next=${encodeURIComponent(dest)}` : `/${locale}/login`);
 
   return (
     <main id="main">
@@ -43,6 +46,7 @@ export default async function CodePage({
 
           <form className="card auth-card" action={verifyCode}>
             <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="next" value={dest} />
             <div className={`field ${error === "code" ? "field-error" : ""}`}>
               <label htmlFor="code">{t("auth.code.label")}</label>
               <span className="hint" id="code-hint">
@@ -72,7 +76,7 @@ export default async function CodePage({
             </button>
 
             <p className="auth-alt mb-0">
-              <Link href={`/${locale}/login`}>{t("auth.code.change")}</Link>
+              <Link href={rawNext ? `/${locale}/login?next=${encodeURIComponent(dest)}` : `/${locale}/login`}>{t("auth.code.change")}</Link>
             </p>
           </form>
         </div>

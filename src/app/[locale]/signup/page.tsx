@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getT } from "@/i18n";
 import { currentSession } from "@/lib/session";
+import { safeNext } from "@/lib/redirect";
 import { getSignup } from "@/lib/signup";
 import { startAadhaarSignup, startEmailSignup } from "../actions";
 
@@ -23,10 +24,12 @@ export default async function SignupPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale } = await params;
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const t = getT(locale);
 
-  if (await currentSession()) redirect(`/${locale}/account`);
+  const rawNext = typeof next === "string" ? next : "";
+  const dest = rawNext ? safeNext(rawNext, locale) : `/${locale}/account`;
+  if (await currentSession()) redirect(dest);
   // A half-finished sign-up resumes where it left off, never from the top.
   const pending = await getSignup();
   if (pending) {
@@ -52,6 +55,7 @@ export default async function SignupPage({
 
             <form action={startEmailSignup} className="mt-1">
               <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="next" value={dest} />
               <div className={`field ${error === "details" ? "field-error" : ""}`}>
                 <label htmlFor="name">{t("auth.signup.name")}</label>
                 <input
@@ -120,6 +124,7 @@ export default async function SignupPage({
 
             <form action={startAadhaarSignup}>
               <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="next" value={dest} />
               <button type="submit" className="btn btn-secondary btn-block">
                 <Icon name="id" />
                 {t("auth.signup.aadhaarBtn")}
@@ -128,7 +133,7 @@ export default async function SignupPage({
 
             <p className="create-line muted mb-0">
               {t("auth.signup.haveAccount")}{" "}
-              <Link href={`/${locale}/login`}>{t("auth.signup.signin")}</Link>
+              <Link href={rawNext ? `/${locale}/login?next=${encodeURIComponent(dest)}` : `/${locale}/login`}>{t("auth.signup.signin")}</Link>
             </p>
           </div>
         </div>
