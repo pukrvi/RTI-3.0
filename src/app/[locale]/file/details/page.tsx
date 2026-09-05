@@ -1,4 +1,5 @@
 import Icon from "@/components/Icon";
+import { redirect } from "next/navigation";
 import { STATES } from "@/data/states";
 import { getT, type Translate } from "@/i18n";
 import { currentSession } from "@/lib/session";
@@ -42,7 +43,8 @@ export default async function FilingDetailsPage({
 }) {
   const { locale } = await params;
   const t = getT(locale);
-  const session = (await currentSession())!;
+  const session = await currentSession();
+  if (!session) redirect(`/${locale}/login?next=/${locale}/file`);
   const p: Profile = (await getProfile(session.contact)) ?? {};
 
   return (

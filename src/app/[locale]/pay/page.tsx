@@ -28,6 +28,9 @@ export default async function PayPage({
   const { locale } = await params;
   const t = getT(locale);
 
+  const session = await currentSession();
+  if (!session) redirect(`/${locale}/login?next=/${locale}/pay`);
+
   const file = await currentCase();
   if (!file) redirect(`/${locale}/file`);
   if (!file.authorityId && !file.authorityText && !file.ministry) {
@@ -38,8 +41,7 @@ export default async function PayPage({
   // Section 7(5): no fee at all for an applicant below the poverty line. The
   // live portal asks the BPL question on the request form and then still routes
   // everyone through a payment screen; here the answer removes the screen.
-  const session = await currentSession();
-  const profile = session ? await getProfile(session.contact) : null;
+  const profile = await getProfile(session.contact);
   const nilFee = profile?.bpl === "yes";
   const fee = nilFee ? "₹0" : "₹10";
 

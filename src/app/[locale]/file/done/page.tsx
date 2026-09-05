@@ -90,7 +90,14 @@ export default async function FiledConfirmationPage({
         </div>
 
         <div className="btn-row no-print">
-          <Link className="btn" href={`/${locale}/track/${file.id}`}>
+          <Link
+            className="btn"
+            href={
+              session
+                ? `/${locale}/account/track/${file.id}`
+                : `/${locale}/track/${file.id}`
+            }
+          >
             {t("file.doneTrack")}
           </Link>
           {session && (

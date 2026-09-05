@@ -291,6 +291,40 @@ main.flush { padding-top: 0; }
 .mainnav .nav-account a { display: flex; align-items: center; gap: 0.4rem; }
 /* Current page: the one filled pill. */
 .mainnav a[aria-current="page"] { background: var(--brand); color: var(--ink-invert); }
+/* Mitra call-to-action: a gradient button pinned before login, not another
+   item in the task menu. It reuses the `.btn` box, so it always stands the
+   same height as the login button beside it. No font-size here: the
+   three-size scale leaves no room for a fourth. */
+.topbar-cta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+/* Doubled class: `.btn` is defined later in this file with equal specificity,
+   so a lone `.mitra-cta` would lose its gradient to the solid brand fill. */
+.btn.mitra-cta {
+  background: linear-gradient(135deg, #6d28d9 0%, #2563eb 55%, #0ea5e9 100%);
+  border-color: transparent;
+  color: #ffffff;
+  /* Same box as the login button beside it (min-height 40px, 7.8px vertical
+     padding), only rounder: a pill, not a rectangle. */
+  border-radius: var(--pill);
+  padding: 7.8px 1rem;
+  font-weight: var(--fw-strong);
+}
+.btn.mitra-cta:hover {
+  background: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 55%, #0284c7 100%);
+  border-color: transparent;
+  color: #ffffff;
+}
+.btn.mitra-cta[aria-current="page"] {
+  background: linear-gradient(135deg, #6d28d9 0%, #2563eb 55%, #0ea5e9 100%);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 2px #ffffff, var(--shadow-1);
+}
+/* High contrast: every surface is black, so the gradient becomes a solid
+   yellow block — the same treatment as every other filled control there. */
+html[data-contrast="high"] .btn.mitra-cta,
+html[data-contrast="high"] .btn.mitra-cta:hover,
+html[data-contrast="high"] .btn.mitra-cta[aria-current="page"] {
+  background: var(--brand); border-color: var(--brand); color: #000000; box-shadow: none;
+}
 
 .navmenu { background: var(--brand); color: var(--ink-invert); }
 .navmenu summary {
@@ -1355,6 +1389,44 @@ h2 .icon, .callout-title .icon { vertical-align: -0.18em; margin-right: 0.15rem;
 }
 .filing-status { font-size: var(--fs-sm); font-weight: var(--fw-strong); white-space: nowrap; }
 .filing-status.is-stop { color: var(--stop-ink); }
+
+/* Request detail (RequestDetail), shared by the signed-in page beside the
+   account menu and the standalone tracking link: a way back, a tight head
+   (eyebrow with the live status beside the subject), the actions that matter
+   today, then a two-column body — the clock, the reply and the citizen's own
+   letter on the left, the filing summary in a rail on the right. One column
+   on a phone, so nothing here ever scrolls sideways. */
+.backlink { font-weight: var(--fw-medium); text-decoration: none; }
+.backlink:hover { text-decoration: underline; }
+.detail-head .detail-eyebrow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem;
+  color: var(--ink-muted); font-weight: var(--fw-medium); margin: 0 0 0.3rem;
+}
+.detail-actions { align-items: center; }
+.detail-actions .push { flex: 1 1 auto; }
+.detail-grid { display: grid; gap: 1rem; align-items: start; }
+@media (min-width: 62rem) {
+  .detail-grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+}
+.prewrap { white-space: pre-wrap; }
+
+/* The statutory clock, reduced to its count: the title, the timeline and the
+   statutory footnote all repeated what the figure and the rail already say.
+   The appeal-window line survives on the card because it is the one date in
+   this column that lives nowhere else here. */
+.clock-figure {
+  font-size: var(--fs-md); font-weight: var(--fw-strong); line-height: 1.3;
+  margin: 0;
+}
+.clock-figure + .clock-appeal { margin-top: 0.35rem; }
+.clock-appeal { font-weight: var(--fw-medium); }
+
+/* Summary rail: every row stacks its grey title over its value, so the
+   registration number reads exactly like the dates around it — including the
+   number itself, which drops the monospace face it wears elsewhere. */
+.kv-stacked div { display: block; }
+.kv-stacked dt { margin-bottom: 0.1rem; }
+.kv-stacked .refno { font-family: var(--font); }
 /* Filing front door: four whole-card links, after the Paper "Home 1c" pattern —
    icon left, title over body — rebuilt in this site's tokens rather than copied:
    --r radius, --shadow-1, --fs-md/--fs-sm type, a brand-soft icon tile, and the

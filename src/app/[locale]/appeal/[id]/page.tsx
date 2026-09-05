@@ -1,13 +1,19 @@
 import Link from "next/link";
+import Icon from "@/components/Icon";
 import { notFound } from "next/navigation";
 import { formatDate, getT } from "@/i18n";
 import { caseAuthorityLabel } from "@/lib/case";
 import { getCase } from "@/lib/store";
+import { currentSession } from "@/lib/session";
 import { appealWindow, effectiveNow, replyClock } from "@/lib/deadline";
 import { appealScaffold } from "@/lib/scaffold";
 import { fileAppeal } from "../../actions";
 
 const GROUNDS = ["no-response", "refused", "incomplete", "fee", "other"] as const;
+
+// Decorative security check, same as login/signup: anything submits, the code
+// is illustrative only.
+const CODES = ["A7X9B", "K4M2Q", "T8B3Z", "F6N9D", "P3W7A"];
 
 /**
  * Step 7 — the first appeal, prefilled, inside the window.
@@ -28,6 +34,11 @@ export default async function AppealPage({
   if (!file?.filed) notFound();
 
   const authority = caseAuthorityLabel(file, locale);
+  // A signed-in citizen reads the request beside the account menu, so the way
+  // back returns there; an anonymous appeal returns to the tracking link.
+  const backHref = (await currentSession())
+    ? `/${locale}/account/track/${file.id}`
+    : `/${locale}/track/${file.id}`;
   const now = effectiveNow(file.clockOffsetDays);
   const clock = replyClock(file.filed.at, now, file.reply?.at);
   const win = appealWindow(file.filed.at, now, file.reply?.at);
@@ -48,11 +59,13 @@ export default async function AppealPage({
     replied: file.reply ? formatDate(file.reply.at, locale) : undefined,
   });
 
+  const code = CODES[Math.floor(Math.random() * CODES.length)];
+
   return (
     <>
       <main id="main">
         <div className="wrap stack-lg">
-          <div>
+          <div className="page-head">
             <h1>{t("appeal.h1")}</h1>
             <p>{t("appeal.intro")}</p>
           </div>
@@ -85,7 +98,7 @@ export default async function AppealPage({
                 <p className="mb-0">{t("appeal.windowClosed")}</p>
               </div>
               <p>
-                <Link className="btn" href={`/${locale}/track/${file.id}`}>
+                <Link className="btn" href={backHref}>
                   {t("common.back")}
                 </Link>
               </p>
@@ -134,9 +147,29 @@ export default async function AppealPage({
                   />
                 </div>
 
-                <p className="callout callout-ok">
-                  <strong>{t("appeal.fee")}</strong>
-                </p>
+                <div className="field">
+                  <label htmlFor="captcha">{t("auth.login.security")}</label>
+                  <div className="captcha-row">
+                    <input
+                      type="text"
+                      id="captcha"
+                      name="captcha"
+                      autoComplete="off"
+                      placeholder={t("auth.login.captchaPh")}
+                    />
+                    <div className="captcha-code" aria-hidden="true">
+                      {code.split("").join(" ")}
+                    </div>
+                    <Link
+                      className="captcha-refresh"
+                      href={`/${locale}/appeal/${file.id}`}
+                      aria-label={t("auth.login.refresh")}
+                      title={t("auth.login.refresh")}
+                    >
+                      <Icon name="history" />
+                    </Link>
+                  </div>
+                </div>
 
                 <div className="btn-row">
                   <button type="submit" className="btn btn-block">
@@ -146,7 +179,7 @@ export default async function AppealPage({
               </form>
 
               <p className="small">
-                <Link href={`/${locale}/track/${file.id}`}>{t("common.back")}</Link>
+                <Link href={backHref}>{t("common.back")}</Link>
               </p>
             </>
           )}

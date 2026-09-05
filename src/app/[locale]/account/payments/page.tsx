@@ -126,7 +126,7 @@ export default async function PaymentsPage({
                   <td>{row.txn ?? "—"}</td>
                   <td>{row.mode ?? "—"}</td>
                   <th scope="row">
-                    <Link className="refno" href={`/${locale}/track/${row.id}`}>
+                    <Link className="refno" href={`/${locale}/account/track/${row.id}`}>
                       {row.ref}
                     </Link>
                   </th>

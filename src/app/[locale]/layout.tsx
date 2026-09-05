@@ -6,6 +6,7 @@ import ChromeGate from "@/components/ChromeGate";
 import Icon from "@/components/Icon";
 import TopActions from "@/components/TopActions";
 import MainNav from "@/components/MainNav";
+import MitraCta from "@/components/MitraCta";
 import SiteFooter from "@/components/SiteFooter";
 import {
   LOCALES,
@@ -50,7 +51,6 @@ const RTI_ACT_URL = "https://rti.dopt.gov.in/rtiact.html";
 
 const NAV: { section: string; href: string; key: string; external?: boolean }[] = [
   { section: "", href: "", key: "nav.home" },
-  { section: "chat", href: "/chat", key: "nav.search" },
   { section: "authorities", href: "/authorities", key: "nav.pa" },
   { section: "published", href: "/published", key: "nav.published" },
   { section: "act", href: RTI_ACT_URL, key: "nav.act", external: true },
@@ -93,9 +93,10 @@ export default async function LocaleLayout({
           <ChromeGate hiddenOn="/chat">
           {/* One unified masthead, full viewport width: the marks anchor the
               left, the task menu sits centred in the middle, and the utility
-              controls with the login button pin to the right. On narrow
-              screens the zones wrap; the task menu itself moves to the
-              disclosure below. */}
+              controls with the Mitra call-to-action and login button pin to
+              the right. On narrow screens the zones wrap; the task menu
+              itself moves to the disclosure below, while the call-to-action
+              stays beside login. */}
           <header className="topbar">
             <div className="topbar-inner">
               <Link className="brand" href={`/${locale}`}>
@@ -149,10 +150,18 @@ export default async function LocaleLayout({
                     contrastOff: t("utility.contrastOff"),
                   }}
                 />
-                <Link className="btn btn-login" href={`/${locale}/${session ? "account" : "login"}`}>
-                  <Icon name="user" />
-                  {session ? t("auth.account") : t("auth.signIn")}
-                </Link>
+                <div className="topbar-cta">
+                  <MitraCta
+                    locale={locale}
+                    href="/chat"
+                    label={t("nav.mitra")}
+                    currentLabel={t("nav.currentPage")}
+                  />
+                  <Link className="btn btn-login" href={`/${locale}/${session ? "account" : "login"}`}>
+                    <Icon name="user" />
+                    {session ? t("auth.account") : t("auth.signIn")}
+                  </Link>
+                </div>
               </div>
             </div>
           </header>

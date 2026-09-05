@@ -46,7 +46,10 @@ export default async function FilePage({
   const t = getT(locale);
 
   const session = await currentSession();
-  const saved = session ? await getProfile(session.contact) : null;
+  // Manual filing needs an account. Chat stays open without one — the gate
+  // happens at the moment of filing, not the moment of asking.
+  if (!session) redirect(`/${locale}/login?next=/${locale}/file`);
+  const saved = await getProfile(session.contact);
 
   // Signed in for the first time: the personal details are asked once, here,
   // before any form is filled — and never asked again.
@@ -378,7 +381,6 @@ export default async function FilePage({
                 <Link href={`/${locale}/account/profile`}>{t("common.change")}</Link>
               </p>
             )}
-            {!session && <p className="small muted">{t("file.signInNote")}</p>}
 
             <div className="form-row">
               <div className={`field ${bad.has("name") ? "field-error" : ""}`}>

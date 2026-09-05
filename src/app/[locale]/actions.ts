@@ -152,6 +152,15 @@ export async function continueToRouting(form: FormData) {
     if (v.kind === "in-scope") patch.authorityId = v.central.item.id;
   }
   await updateCase(existing.id, patch);
+  // Filing needs an account; chatting does not. A signed-out citizen keeps
+  // everything the conversation learned — the draft is already saved — and
+  // lands back on the form after signing in.
+  const session = await currentSession();
+  if (!session) redirect(`/${locale}/login?next=/${locale}/file`);
+  // Fresh accounts meet the one-time details step first — go there directly
+  // rather than bouncing via /file.
+  const saved = await getProfile(session.contact);
+  if (!saved?.updatedAt) redirect(`/${locale}/file/details`);
   redirect(`/${locale}/file`);
 }
 
@@ -171,6 +180,7 @@ const normName = (s: string) =>
 
 export async function submitFiling(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
+  if (!(await currentSession())) redirect(`/${locale}/login?next=/${locale}/file`);
   const existing = await requireCase();
 
   const ministry = str(form, "ministry");
@@ -282,6 +292,7 @@ export async function submitFiling(form: FormData) {
 /** On the single page, the citizen says: the stop does not apply, take me on. */
 export async function confirmAndProceed(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
+  if (!(await currentSession())) redirect(`/${locale}/login?next=/${locale}/file`);
   const existing = await requireCase();
   if (!existing || existing.filed) redirect(`/${locale}/file`);
   if (str(form, "dismiss") === "1") await updateCase(existing.id, { dismissedPublished: true });
@@ -334,6 +345,7 @@ export async function draftLetter(form: FormData) {
 /** The mocked ₹10. No money moves and no payment field exists. */
 export async function payAndFile(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
+  if (!(await currentSession())) redirect(`/${locale}/login?next=/${locale}/pay`);
   const existing = await requireCase();
   if (!existing) redirect(`/${locale}/file`);
 
@@ -381,6 +393,16 @@ async function ownCase(id: string): Promise<CaseFile | null> {
   return getCase(id);
 }
 
+/**
+ * A signed-in citizen reads every request beside the account menu; only an
+ * anonymous tracking link stays on the standalone layout. Every action that
+ * lands back on a request sends the citizen to their own version of it.
+ */
+async function trackPath(locale: string, id: string): Promise<string> {
+  const session = await currentSession();
+  return session ? `/${locale}/account/track/${id}` : `/${locale}/track/${id}`;
+}
+
 export async function demoClock(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const id = str(form, "caseId");
@@ -388,7 +410,7 @@ export async function demoClock(form: FormData) {
   const amount = safeOffset(str(form, "days"));
 
   const existing = await ownCase(id);
-  if (!existing) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
+  if (!existing) redirect(id ? await trackPath(locale, id) : `/${locale}`);
 
   let offset = existing.clockOffsetDays;
   if (mode === "reset") offset = 0;
@@ -396,7 +418,7 @@ export async function demoClock(form: FormData) {
   else offset = offset + amount;
 
   await updateCase(id, { clockOffsetDays: safeOffset(String(Math.max(0, offset))) });
-  redirect(`/${locale}/track/${id}`);
+  redirect(await trackPath(locale, id));
 }
 
 export async function demoReply(form: FormData) {
@@ -407,12 +429,12 @@ export async function demoReply(form: FormData) {
     rawKind === "partial-refusal" || rawKind === "refused" ? rawKind : "full";
 
   const existing = await ownCase(id);
-  if (!existing) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
+  if (!existing) redirect(id ? await trackPath(locale, id) : `/${locale}`);
 
   await updateCase(id, {
     reply: { at: effectiveNow(existing.clockOffsetDays).toISOString(), kind },
   });
-  redirect(`/${locale}/track/${id}`);
+  redirect(await trackPath(locale, id));
 }
 
 export async function demoSilence(form: FormData) {
@@ -420,10 +442,10 @@ export async function demoSilence(form: FormData) {
   const id = str(form, "caseId");
 
   const existing = await ownCase(id);
-  if (!existing) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
+  if (!existing) redirect(id ? await trackPath(locale, id) : `/${locale}`);
 
   await updateCase(id, { reply: undefined });
-  redirect(`/${locale}/track/${id}`);
+  redirect(await trackPath(locale, id));
 }
 
 /** Step 7 — the first appeal. No fee: that is statutory, not a concession. */
@@ -434,7 +456,8 @@ export async function fileAppeal(form: FormData) {
   const text = str(form, "text");
 
   const existing = await ownCase(id);
-  if (!existing?.filed) redirect(id ? `/${locale}/track/${id}` : `/${locale}`);
+  if (!existing?.filed)
+    redirect(id ? await trackPath(locale, id) : `/${locale}`);
 
   const authority = authorityById(existing.authorityId);
   if (!authority && !existing.authorityText && !existing.ministry) {
@@ -443,13 +466,13 @@ export async function fileAppeal(form: FormData) {
 
   const now = effectiveNow(existing.clockOffsetDays);
   const window = appealWindow(existing.filed.at, now, existing.reply?.at);
-  if (!window.isOpen) redirect(`/${locale}/track/${id}?error=window`);
+  if (!window.isOpen) redirect(`${await trackPath(locale, id)}?error=window`);
 
   const at = now.toISOString();
   const ref = makeRef(caseAuthorityCode(existing), "A", at, existing.id);
   await updateCase(id, { appeal: { ref, at, ground, text } });
   await indexRef(ref, id);
-  redirect(`/${locale}/track/${id}`);
+  redirect(await trackPath(locale, id));
 }
 
 /**
@@ -515,13 +538,14 @@ export async function switchLanguage(form: FormData) {
   redirect(`/${chosen}${next.replace(/^\/[^/]+/, "")}`);
 }
 
-/** Find a filed request from its registration number alone. */
+/** Find a filed request from its registration number alone. The lookup box
+ *  lives on the signed-in track page, so a hit lands beside the menu. */
 export async function lookupByRef(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const ref = str(form, "ref");
   const found = await findByRef(ref);
   if (!found?.filed) redirect(`/${locale}/account/track?error=notfound`);
-  redirect(`/${locale}/track/${found.id}`);
+  redirect(`/${locale}/account/track/${found.id}`);
 }
 
 /* ------------------------------------------------------------- sign-in ----
@@ -533,10 +557,12 @@ export async function lookupByRef(form: FormData) {
 export async function startLogin(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const contact = str(form, "contact");
-  if (!contact) redirect(`/${locale}/login?error=contact`);
+  const rawNext = str(form, "next");
+  const suffix = rawNext ? `?next=${encodeURIComponent(safeNext(rawNext, locale))}` : "";
+  if (!contact) redirect(`/${locale}/login?error=contact${rawNext ? `&next=${encodeURIComponent(safeNext(rawNext, locale))}` : ""}`);
 
   await setPending({ contact, method: methodFor(contact) });
-  redirect(`/${locale}/login/code`);
+  redirect(`/${locale}/login/code${suffix}`);
 }
 
 /**
@@ -548,8 +574,33 @@ export async function startLogin(form: FormData) {
  */
 export async function startAadhaarLogin(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
+  const rawNext = str(form, "next");
+  const suffix = rawNext ? `?next=${encodeURIComponent(safeNext(rawNext, locale))}` : "";
   await setPending({ contact: getT(locale)("auth.login.aadhaarDemo"), method: "email" });
-  redirect(`/${locale}/login/code`);
+  redirect(`/${locale}/login/code${suffix}`);
+}
+
+/** Where to land after signing in: back to filing when that is what asked for login, else the account. */
+function afterLogin(locale: string, rawNext: string): string {
+  if (!rawNext) return `/${locale}/account`;
+  const dest = safeNext(rawNext, locale);
+  // safeNext falls back to /locale for garbage — treat that as no destination.
+  if (dest === `/${locale}` && rawNext !== `/${locale}`) return `/${locale}/account`;
+  return dest;
+}
+
+/**
+ * Fresh accounts meet the one-time details step before their first form.
+ * Send them there directly instead of via /file, which would only bounce
+ * them on — one fewer round trip, and no transient URL for callers to race.
+ */
+async function filingDest(locale: string, rawNext: string, contact: string): Promise<string> {
+  const dest = afterLogin(locale, rawNext);
+  if (dest.includes("/file") || dest.includes("/pay")) {
+    const saved = await getProfile(contact);
+    if (!saved?.updatedAt) return `/${locale}/file/details`;
+  }
+  return dest;
 }
 
 /**
@@ -561,7 +612,11 @@ export async function startAadhaarLogin(form: FormData) {
 export async function signInWithPassword(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const contact = str(form, "contact");
-  if (!contact) redirect(`/${locale}/login?error=contact`);
+  const rawNext = str(form, "next");
+  if (!contact) {
+    const suffix = rawNext ? `&next=${encodeURIComponent(safeNext(rawNext, locale))}` : "";
+    redirect(`/${locale}/login?error=contact${suffix}`);
+  }
 
   const session = { contact, method: methodFor(contact) };
   await signIn(session);
@@ -572,16 +627,18 @@ export async function signInWithPassword(form: FormData) {
     await addToAccount(session.contact, draft.id);
   }
 
-  redirect(`/${locale}/account`);
+  redirect(await filingDest(locale, rawNext, contact));
 }
 
 export async function verifyCode(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const code = str(form, "code").replace(/\s/g, "");
+  const rawNext = str(form, "next");
   const pending = await pendingSession();
 
-  if (!pending) redirect(`/${locale}/login`);
-  if (!/^\d{6}$/.test(code)) redirect(`/${locale}/login/code?error=code`);
+  const suffix = rawNext ? `?next=${encodeURIComponent(safeNext(rawNext, locale))}` : "";
+  if (!pending) redirect(`/${locale}/login${suffix}`);
+  if (!/^\d{6}$/.test(code)) redirect(`/${locale}/login/code?error=code${rawNext ? `&next=${encodeURIComponent(safeNext(rawNext, locale))}` : ""}`);
 
   await signIn(pending);
 
@@ -592,7 +649,7 @@ export async function verifyCode(form: FormData) {
     await addToAccount(pending.contact, draft.id);
   }
 
-  redirect(`/${locale}/account`);
+  redirect(await filingDest(locale, rawNext, pending.contact));
 }
 
 /**
@@ -668,11 +725,13 @@ export async function startEmailSignup(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
   const name = str(form, "name");
   const email = str(form, "email");
+  const rawNext = str(form, "next");
+  const next = rawNext ? safeNext(rawNext, locale) : undefined;
   if (!name || !email || !email.includes("@")) {
-    redirect(`/${locale}/signup?error=details`);
+    redirect(`/${locale}/signup?error=details${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
   const { setSignup } = await import("@/lib/signup");
-  await setSignup({ method: "email", step: "code", name, email });
+  await setSignup({ method: "email", step: "code", name, email, next });
   redirect(`/${locale}/signup/code`);
 }
 
@@ -689,8 +748,10 @@ export async function verifySignupCode(form: FormData) {
 
 export async function startAadhaarSignup(form: FormData) {
   const locale = normaliseLocale(str(form, "locale"));
+  const rawNext = str(form, "next");
+  const next = rawNext ? safeNext(rawNext, locale) : undefined;
   const { setSignup } = await import("@/lib/signup");
-  await setSignup({ method: "aadhaar", step: "aadhaar" });
+  await setSignup({ method: "aadhaar", step: "aadhaar", next });
   redirect(`/${locale}/signup/aadhaar`);
 }
 
@@ -781,6 +842,7 @@ export async function completeSignup(form: FormData) {
 
   await putProfile(contact || pending.email || pending.name || "signup", profile);
   await signIn({ contact: contact || profile.email || "signup", method: "email" });
+  const dest = pending.next ?? `/${locale}/account`;
   await clearSignup();
 
   const draft = await requireCase();
@@ -789,5 +851,5 @@ export async function completeSignup(form: FormData) {
     if (contact) await addToAccount(contact, draft.id);
   }
 
-  redirect(`/${locale}/account`);
+  redirect(dest);
 }
