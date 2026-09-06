@@ -36,11 +36,13 @@ export default function TopActions({
   languages,
   prefs,
   labels,
+  selectId = "lang-select",
 }: {
   locale: string;
   languages: Array<{ code: string; native: string; english: string; available: boolean }>;
   prefs: Prefs;
   labels: Labels;
+  selectId?: string;
 }) {
   const pathname = usePathname() || `/${locale}`;
   const hidden = (
@@ -58,11 +60,11 @@ export default function TopActions({
     <div className="topbar-actions">
       <form className="hgroup" action={switchLanguage}>
         {hidden}
-        <label className="visually-hidden" htmlFor="lang-select">
+        <label className="visually-hidden" htmlFor={selectId}>
           {labels.language}
         </label>
         <select
-          id="lang-select"
+          id={selectId}
           name="code"
           defaultValue={locale}
           // Choosing a language is the whole action; there is nothing to confirm.

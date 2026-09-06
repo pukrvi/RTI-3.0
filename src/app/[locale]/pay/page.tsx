@@ -41,8 +41,10 @@ export default async function PayPage({
   // Section 7(5): no fee at all for an applicant below the poverty line. The
   // live portal asks the BPL question on the request form and then still routes
   // everyone through a payment screen; here the answer removes the screen.
+  // The filing carries its own answer — editable on the form for this filing
+  // only — and the account is the fallback when the form never said.
   const profile = await getProfile(session.contact);
-  const nilFee = profile?.bpl === "yes";
+  const nilFee = (file.bpl ?? profile?.bpl) === "yes";
   const fee = nilFee ? "₹0" : "₹10";
 
   return (

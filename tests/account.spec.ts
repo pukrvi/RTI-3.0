@@ -93,6 +93,31 @@ test("details are typed once and fill the request form", async ({ page }) => {
   await expect(page.getByLabel("PIN code")).toHaveValue("560001");
 });
 
+test("the filing form shows every saved personal detail, already filled in", async ({
+  page,
+}) => {
+  // The seeded demo account holds a full profile, so every section-3 field
+  // has a saved answer to arrive with.
+  await login(page, "vish@abc.com");
+  await page.goto("/en/file");
+  await dismissGuidelines(page);
+
+  await expect(page.locator("#mobile")).toHaveValue("98110 45623");
+  await expect(page.locator("#state")).toHaveValue("Delhi");
+  await expect(page.getByRole("radio", { name: "Male", exact: true })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Illiterate", exact: true })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Indian", exact: true })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Urban", exact: true })).toBeChecked();
+  await expect(
+    page.getByRole("group", { name: "Are you below the poverty line?" })
+      .getByRole("radio", { name: "No", exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("group", { name: "Country", exact: true })
+      .getByRole("radio", { name: "India", exact: true }),
+  ).toBeChecked();
+});
+
 test("below the poverty line means no fee, and no payment screen to get wrong", async ({
   page,
 }) => {

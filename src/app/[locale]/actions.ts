@@ -227,6 +227,15 @@ export async function submitFiling(form: FormData) {
       ? (rawAttachment as unknown as File)
       : null;
 
+  // The rest of the account information travels with the filing, editable
+  // here for this filing only — same allow-listing as saveProfile, so a
+  // forged value never lands on the case.
+  const pick = <T extends string>(key: string, allowed: readonly T[]): T | undefined => {
+    const value = str(form, key);
+    return (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
+  };
+  const bpl = pick("bpl", ["yes", "no"] as const);
+
   const values = {
     ministry: resolvedMinistry,
     authorityText,
@@ -239,6 +248,18 @@ export async function submitFiling(form: FormData) {
     addr2: str(form, "addr2"),
     addr3: str(form, "addr3"),
     pin: str(form, "pin"),
+    mobile: str(form, "mobile"),
+    phone: str(form, "phone"),
+    gender: pick("gender", ["male", "female", "third"] as const),
+    education: pick("education", ["literate", "illiterate"] as const),
+    citizenship: pick("citizenship", ["indian", "other"] as const),
+    bpl,
+    bplCard: bpl === "yes" ? str(form, "bplCard") : "",
+    bplYear: bpl === "yes" ? str(form, "bplYear") : "",
+    bplAuthority: bpl === "yes" ? str(form, "bplAuthority") : "",
+    state: str(form, "state"),
+    country: pick("country", ["india", "other"] as const),
+    habitation: pick("habitation", ["rural", "urban"] as const),
     ...(attachment
       ? {
           attachmentName: attachment.name || "attachment",

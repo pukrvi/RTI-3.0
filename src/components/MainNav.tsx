@@ -13,6 +13,10 @@ import { usePathname } from "next/navigation";
  * that, so the same links become a disclosure menu — a <details> element that
  * opens and closes with no JavaScript at all (`variant="mobile"`). The layout
  * renders both and lets the breakpoint show exactly one.
+ *
+ * On mobile the disclosure also carries `utility`: the masthead row has room
+ * only for the marks and the hamburger, so the language, text-size, contrast,
+ * Mitra and account controls render a second time inside the dropdown.
  */
 export interface NavItem {
   section: string;
@@ -28,6 +32,7 @@ export default function MainNav({
   menuLabel,
   currentLabel,
   variant,
+  utility,
 }: {
   locale: string;
   items: NavItem[];
@@ -35,6 +40,7 @@ export default function MainNav({
   menuLabel: string;
   currentLabel: string;
   variant: "desktop" | "mobile";
+  utility?: React.ReactNode;
 }) {
   const pathname = usePathname() || `/${locale}`;
   const active = pathname.split("/").filter(Boolean)[1] ?? "";
@@ -65,14 +71,17 @@ export default function MainNav({
 
   if (variant === "mobile") {
     return (
-      <details className="navmenu">
+      <details className="navmenu navmenu-inline">
         <summary>
           <span className="bars" aria-hidden="true" />
           {menuLabel}
         </summary>
-        <nav aria-label={navLabel}>
-          <ul>{items.map((item) => link(item))}</ul>
-        </nav>
+        <div className="navmenu-panel">
+          <nav aria-label={navLabel}>
+            <ul>{items.map((item) => link(item))}</ul>
+          </nav>
+          {utility ? <div className="navmenu-utility">{utility}</div> : null}
+        </div>
       </details>
     );
   }

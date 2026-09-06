@@ -337,12 +337,12 @@ html[data-contrast="high"] .btn.mitra-cta[aria-current="page"] {
 .navmenu summary .bars::before, .navmenu summary .bars::after {
   content: ""; display: block; margin-top: 4px; border-top: 2px solid currentColor;
 }
-.navmenu ul { list-style: none; margin: 0; padding: 0 0 0.5rem; max-width: none; }
-.navmenu a {
+.navmenu nav ul { list-style: none; margin: 0; padding: 0 0 0.5rem; max-width: none; }
+.navmenu nav a {
   display: block; padding: 0.7rem var(--gutter); color: var(--ink-invert);
   text-decoration: none; font-weight: var(--fw-medium); border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
-.navmenu a[aria-current="page"] { background: var(--surface); color: var(--brand-dark); }
+.navmenu nav a[aria-current="page"] { background: var(--surface); color: var(--brand-dark); }
 
 /* The inline masthead nav is desktop-only; below 64rem the disclosure menu
    takes over. The links never wrap. */
@@ -373,14 +373,64 @@ html[data-contrast="high"] .btn.mitra-cta[aria-current="page"] {
 @media (max-width: 63.999rem) {
   .brand .logo { height: 4.75rem; }
   .brand .emblem { height: 4.75rem; }
+
+  /* Mobile header only: one row holding just the marks and the hamburger.
+     The desktop row's utility controls hide here — the same controls render
+     again inside the hamburger's dropdown (see .navmenu-utility below), and
+     display:none removes the hidden copy from the accessibility tree, so only
+     one copy is ever exposed. */
+  .topbar { position: relative; z-index: 40; }
+  .topbar-inner { flex-wrap: nowrap; gap: 0.75rem 1rem; }
+  .brand { flex: 1 1 auto; min-width: 0; }
+  .brand .logo { max-width: 100%; }
+  .brand .emblem { flex: none; }
+  .brand-divider { flex: none; }
+  .topbar-side { display: none; }
+
+  /* The <details> itself is just the hamburger pinned beside the marks
+     (position:static), so its panel anchors to the header — an absolute box
+     against .topbar, full viewport width, scrolling within the viewport when
+     long. No JavaScript, no layout shift: closed, the header row is one line;
+     open, the panel overlays the page. */
+  .navmenu-inline { background: transparent; color: var(--ink); flex: none; margin-left: auto; position: static; }
+  .navmenu-inline summary {
+    padding: 0.5rem 0.75rem; justify-content: center;
+    min-width: 48px;
+    border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+    background: var(--surface); color: var(--ink);
+  }
+  .navmenu-inline summary:hover { background: var(--brand-soft); }
+  .navmenu-inline[open] summary { background: var(--brand-soft); }
+  .navmenu-panel {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--brand); color: var(--ink-invert);
+    border-top: 1px solid var(--line);
+    box-shadow: var(--shadow-2);
+    max-height: calc(100dvh - 100%); overflow-y: auto;
+  }
+  /* The desktop row's utility controls, second home: language and text
+     controls on one wrapping row, then the two account actions stacked
+     full-width for the thumb. Divided from the task links by a hairline,
+     like the links. */
+  .navmenu-utility {
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.85rem var(--gutter) 1rem;
+    display: flex; flex-direction: column; gap: 0.85rem;
+  }
+  .navmenu-utility .topbar-actions { justify-content: space-between; }
+  .navmenu-utility .topbar-cta { display: grid; gap: 0.6rem; justify-content: stretch; }
+  .navmenu-utility .topbar-cta .btn { width: 100%; }
 }
 
 @media (max-width: 40rem) {
   .topbar-inner { gap: 0.75rem; }
+  .brand { gap: 0.5rem; }
   .brand .logo { height: 3.5rem; }
   .brand .emblem { height: 3.5rem; }
-  .topbar-actions { justify-content: flex-end; }
-  .topbar-actions .hgroup:first-child { width: 100%; justify-content: flex-end; }
+  /* Homepage hero: the two filing actions stack full-width, so neither
+     squeezes beside the arrows on a 390px screen. Desktop keeps the row. */
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
 }
 
 /* ==================================================================== cards = */
@@ -458,6 +508,9 @@ html[data-contrast="high"] .btn.mitra-cta[aria-current="page"] {
 /* Quieter note, for callouts that sit below the main task rather than above it. */
 .callout-compact { padding: 0.5rem 0.8rem; font-size: var(--fs-sm); }
 .callout-compact .callout-title { font-size: var(--fs-sm); margin-bottom: 0.2rem; }
+/* Short centred notice: shrink-wraps its text instead of stretching full
+   width with mostly empty space. */
+.callout-fit { width: fit-content; max-width: 100%; margin-inline: auto; text-align: center; }
 .callout-compact p + p { margin-top: 0.35rem; }
 
 /* =================================================================== badges = */
@@ -1637,11 +1690,15 @@ fieldset.file-sec > legend {
   font-weight: var(--fw-medium);
 }
 
-/* Guidelines dialog: long left-aligned content inside the centred shell. */
+/* Guidelines dialog: long left-aligned content inside the centred shell.
+   The title keeps the global h1 size (32px strong) so it reads as the
+   dialog's heading, not as one more section. The dialog box itself is the
+   initial focus target (see FileGuidelinesDialog) — a fallback, not a
+   control — so it takes no focus ring; the ring still shows on the button
+   once the citizen Tabs to it. */
 .guide-dialog { text-align: start; }
+.guide-dialog:focus { outline: none; box-shadow: none; }
 .guide-dialog > h1.guide-title {
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
   text-align: center;
   margin-bottom: 1rem;
 }
@@ -1731,10 +1788,10 @@ html[data-contrast="high"] .slide-arrow { background: #000000; color: var(--bran
    and border cover it — only the mobile disclosure needs its own band. */
 html[data-contrast="high"] .navmenu { background: #000000; border-bottom: 2px solid var(--line); }
 html[data-contrast="high"] .mainnav a,
-html[data-contrast="high"] .navmenu a,
+html[data-contrast="high"] .navmenu nav a,
 html[data-contrast="high"] .navmenu summary { color: var(--brand); text-decoration: underline; }
 html[data-contrast="high"] .mainnav a[aria-current="page"],
-html[data-contrast="high"] .navmenu a[aria-current="page"] { background: var(--brand); color: #000000; }
+html[data-contrast="high"] .navmenu nav a[aria-current="page"] { background: var(--brand); color: #000000; }
 html[data-contrast="high"] .mainnav a:hover { background: var(--brand); color: #000000; }
 html[data-contrast="high"] .mainnav li + li::before { color: var(--brand); opacity: 1; }
 html[data-contrast="high"] .site-footer { background: #000000; color: var(--ink); border-top: 2px solid var(--line); }
@@ -1800,10 +1857,12 @@ html[data-contrast="high"] .filing-hot { border-color: var(--line); }
 
 .deck-slide {
   border-top: 1px solid var(--line);
-  padding: 2.75rem 0 3.25rem;
+  /* A normal webpage rhythm: one idea per section, uniform padding, dividers
+     between sections — no forced viewport folds, so no half-empty screens. */
+  padding: 3.5rem 0;
 }
 .deck-slide:nth-of-type(even) { background: var(--surface-2); }
-.deck-slide:first-of-type { border-top: 0; padding-top: 1rem; }
+.deck-slide:first-of-type { border-top: 0; }
 .deck-final { background: var(--brand-soft); }
 
 .deck-kicker {
@@ -1824,8 +1883,8 @@ html[data-contrast="high"] .filing-hot { border-color: var(--line); }
 
 .deck-sub {
   color: var(--ink-muted);
-  margin: 0 0 1.5rem;
-  max-width: 56ch;
+  margin: 0 0 2rem;
+  max-width: 62ch;
 }
 
 .deck-points {
@@ -1872,3 +1931,158 @@ html[data-contrast="high"] .filing-hot { border-color: var(--line); }
 .deck-chip-arrow { color: var(--ink-soft); }
 
 .deck-note { color: var(--ink-muted); margin: 1.25rem 0 0; }
+
+/* Wider measure for the opening and closing titles only — same type style. */
+.deck-title-hero { max-width: 24ch; }
+
+/* Icon medallion: every deck icon sits in one of these beside the label that
+   carries the meaning (icons are decorative, aria-hidden in the markup). */
+.deck-ic {
+  align-items: center;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-tint);
+  border-radius: var(--r);
+  color: var(--brand-dark);
+  display: inline-flex;
+  flex: none;
+  height: 2.75em;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+  width: 2.75em;
+}
+.deck-ic .icon { height: 1.5em; width: 1.5em; }
+
+/* Compact horizontal tiles (cohorts, trust, government wins). */
+.deck-tile { display: flex; gap: 0.8rem; align-items: flex-start; }
+.deck-tile .deck-ic { margin-bottom: 0; height: 2.5em; width: 2.5em; }
+.deck-tile h3 { margin-bottom: 0.2rem; }
+
+/* Icon rows for the text half of a split slide. */
+.deck-row { display: flex; gap: 0.8rem; align-items: flex-start; }
+.deck-row + .deck-row { margin-top: 1rem; }
+.deck-row .deck-ic { margin-bottom: 0; height: 2.5em; width: 2.5em; }
+.deck-row h3 { margin-bottom: 0.2rem; }
+.deck-row .deck-note { margin-top: 1rem; }
+
+/* Split slides (chat, profile, language): mock visual beside the points.
+   Single column on phones, halves on desktop with room to breathe. */
+.deck-split { align-items: start; gap: 2.5rem; }
+
+/* Title journey strip: Ask → Find → File. */
+.deck-strip {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+.deck-strip .step {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  box-shadow: var(--shadow-1);
+  color: var(--brand-dark);
+  display: inline-flex;
+  font-weight: var(--fw-medium);
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem;
+}
+.deck-strip .sep { color: var(--ink-muted); font-weight: var(--fw-strong); }
+
+/* Failure flow: the four steps of today's journey, each with its number. */
+.deck-flow {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  max-width: none;
+  padding: 0;
+}
+@media (min-width: 44rem) {
+  .deck-flow { grid-template-columns: repeat(4, 1fr); }
+}
+.deck-step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-1);
+  padding: 0.9rem 1rem;
+  position: relative;
+}
+@media (min-width: 44rem) {
+  .deck-step:not(:last-child)::after {
+    color: var(--brand);
+    content: "→";
+    font-weight: var(--fw-strong);
+    position: absolute;
+    right: -0.95rem;
+    top: 2.4rem;
+  }
+}
+.deck-step .deck-ic { height: 2.5em; width: 2.5em; }
+.deck-step .step-n {
+  color: var(--ink-muted);
+  font-weight: var(--fw-medium);
+  margin: 0 0 0.25rem;
+}
+
+/* Chat mock: one citizen bubble, one assistant bubble with verdict chips. */
+.chat-mock { display: flex; flex-direction: column; gap: 0.7rem; }
+.bubble { border-radius: var(--r); max-width: 32rem; padding: 0.7rem 0.9rem; }
+.bubble-you {
+  align-self: flex-end;
+  background: var(--brand);
+  color: var(--ink-invert);
+  font-weight: var(--fw-medium);
+}
+.bubble-mitra {
+  align-self: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.mini-chip {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: var(--pill);
+  display: inline-flex;
+  font-weight: var(--fw-medium);
+  gap: 0.35rem;
+  margin: 0 0.4rem 0.4rem 0;
+  padding: 0.15rem 0.65rem;
+}
+.mini-chip .icon { height: 1em; width: 1em; }
+.mini-chip-ok { background: var(--ok-bg); color: var(--ok-ink); }
+.mini-chip-info { background: var(--brand-soft); color: var(--brand-dark); }
+.bubble-mitra .muted { color: var(--ink-muted); }
+
+/* Attention-list mock: what the dashboard pushes forward. */
+.attn-mock .attn-row {
+  align-items: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+}
+.attn-mock .attn-row + .attn-row { margin-top: 0.6rem; }
+.attn-mock .deck-ic { height: 2.25em; margin-bottom: 0; width: 2.25em; }
+
+/* Language figure: the key number beside its label, with a brand accent bar.
+   Key figures stay on the site's title size — the isolation gives the emphasis. */
+.deck-figure {
+  align-items: center;
+  border-left: 6px solid var(--brand);
+  display: flex;
+  gap: 1.1rem;
+}
+.figure-big {
+  color: var(--brand-dark);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1;
+}
+.figure-label { font-weight: var(--fw-medium); margin: 0 0 0.2rem; }

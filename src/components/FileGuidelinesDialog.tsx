@@ -50,7 +50,7 @@ export default function FileGuidelinesDialog({
   // unless this tab session already agreed, so post-submit round-trips and
   // reloads never nag twice.
   const [open, setOpen] = useState(false);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const dismiss = useCallback(() => {
     try {
@@ -79,7 +79,12 @@ export default function FileGuidelinesDialog({
 
   useEffect(() => {
     if (!open) return;
-    closeRef.current?.focus();
+    // Focus lands on the dialog itself — at the top — so the guidelines open
+    // on the first line and the citizen scrolls down to the confirm button.
+    // Focusing the confirm button instead (as before) pulled the scroll
+    // container down to it, which read as the dialog skipping its own text.
+    dialogRef.current?.scrollTo(0, 0);
+    dialogRef.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") dismiss();
     };
@@ -96,6 +101,8 @@ export default function FileGuidelinesDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="guide-title"
+        tabIndex={-1}
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <h1 id="guide-title" className="guide-title">{title}</h1>
@@ -114,7 +121,6 @@ export default function FileGuidelinesDialog({
             type="button"
             className="btn"
             onClick={dismiss}
-            ref={closeRef}
           >
             {closeLabel}
           </button>
