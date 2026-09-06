@@ -21,7 +21,6 @@ import type { Prefs, TextSize } from "@/lib/prefs";
 export interface Labels {
   language: string;
   languageGo: string;
-  unavailable: string;
   textSize: string;
   smaller: string;
   normal: string;
@@ -51,8 +50,9 @@ export default function TopActions({
     </>
   );
 
+  // Only translated languages are listed. The Eighth Schedule names every
+  // language; this menu offers the ones the site actually speaks.
   const live = languages.filter((l) => l.available);
-  const rest = languages.filter((l) => !l.available);
 
   return (
     <div className="topbar-actions">
@@ -73,13 +73,6 @@ export default function TopActions({
               {l.native}
             </option>
           ))}
-          <optgroup label={labels.unavailable}>
-            {rest.map((l) => (
-              <option key={l.code} value={l.code} lang={l.code} disabled>
-                {l.native} — {l.english}
-              </option>
-            ))}
-          </optgroup>
         </select>
         {/* Kept for the browser that never ran the script: pressing Enter in
             the select submits, and this gives the form an explicit control. */}

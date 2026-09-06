@@ -28,6 +28,19 @@
  */
 
 import { byId } from "@/data/authorities";
+import { DEMO_AADHAAR_IDENTITY } from "@/lib/signup";
+import { DEMO_TEXT_HI, DEMO_AADHAAR_ADDR2_HI } from "./demo-text.hi";
+import { DEMO_TEXT_BN, DEMO_AADHAAR_ADDR2_BN } from "./demo-text.bn";
+import { DEMO_TEXT_GU, DEMO_AADHAAR_ADDR2_GU } from "./demo-text.gu";
+import { DEMO_TEXT_KN, DEMO_AADHAAR_ADDR2_KN } from "./demo-text.kn";
+import { DEMO_TEXT_ML, DEMO_AADHAAR_ADDR2_ML } from "./demo-text.ml";
+import { DEMO_TEXT_MR, DEMO_AADHAAR_ADDR2_MR } from "./demo-text.mr";
+import { DEMO_TEXT_OR, DEMO_AADHAAR_ADDR2_OR } from "./demo-text.or";
+import { DEMO_TEXT_TA, DEMO_AADHAAR_ADDR2_TA } from "./demo-text.ta";
+import { DEMO_TEXT_TE, DEMO_AADHAAR_ADDR2_TE } from "./demo-text.te";
+import { DEMO_TEXT_UR, DEMO_AADHAAR_ADDR2_UR } from "./demo-text.ur";
+import { DEMO_TEXT_PA, DEMO_AADHAAR_ADDR2_PA } from "./demo-text.pa";
+import { DEMO_TEXT_AS, DEMO_AADHAAR_ADDR2_AS } from "./demo-text.as";
 import { makeRef } from "@/lib/ref";
 import type { CaseFile, Profile } from "@/lib/store";
 
@@ -139,14 +152,14 @@ const SEEDS: Seed[] = [
     // Overdue with no reply: filed 45 days ago, so 15 days past the 30-day
     // deadline. A deemed refusal — the appeal window is open, and the
     // dashboard, track status and file-appeal pages all say so.
-    id: "demo-r3-passport",
-    authorityId: "mea",
+    id: "demo-r3-pmkisan",
+    authorityId: "agri",
     question:
-      "How many passports were issued in each of the last five years, and how long did police verification take?",
-    subject: "Passports issued and police verification time, 2021–2026",
+      "How many PM-KISAN beneficiaries were removed in Nashik district, Maharashtra in 2024–25 and 2025–26, and on what grounds?",
+    subject: "PM-KISAN beneficiaries removed in Nashik district, Maharashtra, 2024–2026",
     body: [
-      `1. The number of passport applications received and the number of passports issued in each year from ${PERIOD_5Y}.`,
-      "2. The average number of days taken for police verification of passport applications in each of those years, State-wise.",
+      `1. The number of PM-KISAN beneficiaries removed from the beneficiary list in Nashik district, Maharashtra in each year from 1 April 2024 to 31 March 2026, with the grounds recorded for removal in each case (income-tax payer, land record mismatch, duplicate Aadhaar seeding or other).`,
+      "2. The number of instalments withheld on account of such removals in the same period.",
       "3. If any part of this information is held by another public authority, please transfer that part under section 6(3) of the RTI Act, 2005 and inform me of the transfer.",
       "4. Please supply the information in electronic form to the email address given above.",
     ].join("\n\n"),
@@ -157,11 +170,11 @@ const SEEDS: Seed[] = [
     // 30-day appeal window has closed. Disposed, read-only history.
     id: "demo-r4-epfo",
     authorityId: "epfo-org",
-    question: "How long does the regional EPFO office take to settle PF withdrawal claims?",
-    subject: "Time taken to settle PF withdrawal claims at the regional office",
+    question: "What was the median settlement time for PF withdrawal claims at the EPFO Regional Office, Delhi in Jan–Mar 2026?",
+    subject: "Time taken to settle PF withdrawal claims at the EPFO Regional Office, Delhi, Jan–Mar 2026",
     body: [
-      `1. The median number of working days taken to settle online PF withdrawal claims and physical PF withdrawal claims in the quarter from 1 January 2026 to 31 March 2026.`,
-      "2. The number of PF withdrawal claims rejected in the same quarter, with the three most common reasons for rejection.",
+      `1. The median number of working days taken to settle online PF withdrawal claims and physical PF withdrawal claims at the EPFO Regional Office, Delhi in the quarter from 1 January 2026 to 31 March 2026.`,
+      "2. The number of PF withdrawal claims rejected at the same office in the same quarter, with the three most common reasons for rejection.",
       "3. If any part of this information is held by another public authority, please transfer that part under section 6(3) of the RTI Act, 2005 and inform me of the transfer.",
       "4. Please supply the information in electronic form to the email address given above.",
     ].join("\n\n"),
@@ -175,11 +188,11 @@ const SEEDS: Seed[] = [
     // page as settled history.
     id: "demo-r5-mgnrega",
     authorityId: "rural",
-    question: "How much MGNREGA wage money is pending in the district and how long have workers waited?",
-    subject: "Pending MGNREGA wage payments and delay compensation in the district",
+    question: "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?",
+    subject: "Pending MGNREGA wage payments and delay compensation in Gaya district, Bihar",
     body: [
-      `1. The total amount of MGNREGA wage payments pending in the district as on 31 March 2026, with the number of workers affected.`,
-      "2. Muster-roll-wise details of workers whose wages were delayed beyond 15 days in 2025–26, with the delay compensation paid in each case.",
+      `1. The total amount of MGNREGA wage payments pending in Gaya district, Bihar as on 31 March 2026, with the number of workers affected.`,
+      "2. Muster-roll-wise details of workers in the same district whose wages were delayed beyond 15 days in 2025–26, with the delay compensation paid in each case.",
       "3. If any part of this information is held by another public authority, please transfer that part under section 6(3) of the RTI Act, 2005 and inform me of the transfer.",
       "4. Please supply the information in electronic form to the email address given above.",
     ].join("\n\n"),
@@ -191,7 +204,7 @@ const SEEDS: Seed[] = [
     // Refused: asks for a named private company's tax returns and refund
     // details — third-party personal information, denied in full under
     // section 8(1)(j). Reply is recent, so the appeal window is still open
-    // and this sits in "ready to appeal" beside the overdue passport case.
+    // and this sits in "ready to appeal" beside the overdue PM-KISAN case.
     id: "demo-r6-cbdt",
     authorityId: "cbdt-cpc",
     question:
@@ -292,6 +305,72 @@ function buildCase(seed: Seed): CaseFile {
 export const DEMO_CASES: CaseFile[] = SEEDS.map(buildCase);
 
 const byIdMap = new Map(DEMO_CASES.map((c) => [c.id, c]));
+/**
+ * Per-locale renderings of the seeds' filed content.
+ *
+ * The seeds are filed once, in English. When a citizen browses the demo
+ * account in another locale, the viewing locale's pack overlays the filed
+ * text -- same drop-in pattern as locale-text files, keyed by seed id
+ * (demo-r1-nh48 through demo-r8-dopt). Each pack carries appealText only
+ * for demo-r7-toll, the one seed that has appealed.
+ */
+export interface DemoSeedText {
+  question: string;
+  subject: string;
+  body: string;
+  appealText?: string;
+}
+
+export const DEMO_TEXT: Record<string, Record<string, DemoSeedText>> = {
+  hi: DEMO_TEXT_HI,
+  bn: DEMO_TEXT_BN,
+  gu: DEMO_TEXT_GU,
+  kn: DEMO_TEXT_KN,
+  ml: DEMO_TEXT_ML,
+  mr: DEMO_TEXT_MR,
+  or: DEMO_TEXT_OR,
+  ta: DEMO_TEXT_TA,
+  te: DEMO_TEXT_TE,
+  ur: DEMO_TEXT_UR,
+  pa: DEMO_TEXT_PA,
+  as: DEMO_TEXT_AS,
+};
+
+/** The mock Aadhaar handoff's street line, per locale. Proper nouns stay. */
+export const DEMO_AADHAAR_ADDR2: Record<string, string> = {
+  hi: DEMO_AADHAAR_ADDR2_HI,
+  bn: DEMO_AADHAAR_ADDR2_BN,
+  gu: DEMO_AADHAAR_ADDR2_GU,
+  kn: DEMO_AADHAAR_ADDR2_KN,
+  ml: DEMO_AADHAAR_ADDR2_ML,
+  mr: DEMO_AADHAAR_ADDR2_MR,
+  or: DEMO_AADHAAR_ADDR2_OR,
+  ta: DEMO_AADHAAR_ADDR2_TA,
+  te: DEMO_AADHAAR_ADDR2_TE,
+  ur: DEMO_AADHAAR_ADDR2_UR,
+  pa: DEMO_AADHAAR_ADDR2_PA,
+  as: DEMO_AADHAAR_ADDR2_AS,
+};
+
+/** Overlay a demo case's filed text with the viewing locale's rendering. */
+export function localizeDemoCase(file: CaseFile, locale: string): CaseFile {
+  const pack = DEMO_TEXT[locale]?.[file.id];
+  if (!pack) return file;
+  return {
+    ...file,
+    question: pack.question,
+    subject: pack.subject,
+    body: pack.body,
+    appeal:
+      file.appeal && pack.appealText ? { ...file.appeal, text: pack.appealText } : file.appeal,
+  };
+}
+
+/** Localised street line for the simulated Aadhaar identity. */
+export function demoAadhaarAddr2(locale: string): string {
+  return DEMO_AADHAAR_ADDR2[locale] ?? DEMO_AADHAAR_IDENTITY.addr2;
+}
+
 
 /** Case-insensitive, so Vish@ABC.com sees the same demo. */
 export function isDemoContact(contact: string | undefined): boolean {

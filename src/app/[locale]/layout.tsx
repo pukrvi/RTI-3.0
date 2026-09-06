@@ -133,7 +133,6 @@ export default async function LocaleLayout({
                   labels={{
                     language: t("top.language"),
                     languageGo: t("top.languageGo"),
-                    unavailable: t("top.languageUnavailable"),
                     textSize: t("top.textSize"),
                     smaller: t("top.textSmaller"),
                     normal: t("top.textNormal"),

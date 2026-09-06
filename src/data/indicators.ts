@@ -12,6 +12,9 @@
  */
 export interface Indicator {
   value: string;
+  /** Optional dictionary key whose translation replaces `value` — for values
+   *  that are words in a language ("26 days"), not bare numbers. */
+  valueKey?: string;
   labelKey: string;
   asOfKey: string;
 }
@@ -22,6 +25,6 @@ export const INDICATORS_AS_OF = "2026-07-31";
 export const INDICATORS: Indicator[] = [
   { value: "14,82,600", labelKey: "ind.filed", asOfKey: "ind.asOfYear" },
   { value: "81%", labelKey: "ind.onTime", asOfKey: "ind.asOfYear" },
-  { value: "26 days", labelKey: "ind.median", asOfKey: "ind.asOfYear" },
+  { value: "26 days", valueKey: "ind.medianValue", labelKey: "ind.median", asOfKey: "ind.asOfYear" },
   { value: "1,08,720", labelKey: "ind.appeals", asOfKey: "ind.asOfYear" },
 ];

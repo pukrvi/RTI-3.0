@@ -70,7 +70,7 @@ test("journey screenshots", async ({ page }, testInfo) => {
   await page.goto("/en/chat");
   await shot("01b-ask-chat");
 
-  await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
+  await beginRequest(page, "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?");
   await shot("01c-ask-answered");
 
   // Signed in for the first time against a fresh mock store, the personal
@@ -143,7 +143,7 @@ test("journey screenshots", async ({ page }, testInfo) => {
 
   await page.goto("/hi");
   await shot("14b-home-hindi");
-  await beginRequest(page, "मेरा पीएफ निकासी दावा कितने दिन में निपटा?", "hi", { fresh: true });
+  await beginRequest(page, "दिल्ली क्षेत्रीय ईपीएफओ कार्यालय में जनवरी–मार्च 2026 में पीएफ निकासी दावों के निपटान में औसत कितना समय लगा?", "hi", { fresh: true });
   await shot("14c-hindi-ask");
   await continueFromChat(page, "hi");
   await shot("14-hindi-check");

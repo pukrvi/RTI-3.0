@@ -3,6 +3,7 @@ import { STATES } from "@/data/states";
 import { getT, type Translate } from "@/i18n";
 import { currentSession } from "@/lib/session";
 import { DEMO_AADHAAR_IDENTITY, getSignup } from "@/lib/signup";
+import { demoAadhaarAddr2 } from "@/data/demo-account";
 import { redirect } from "next/navigation";
 import { completeSignup } from "../../actions";
 
@@ -60,7 +61,7 @@ export default async function SignupDetailsPage({
   const name = fromAadhaar ? DEMO_AADHAAR_IDENTITY.name : (pending.name ?? "");
   const email = pending.email ?? "";
   const addr1 = fromAadhaar ? DEMO_AADHAAR_IDENTITY.addr1 : "";
-  const addr2 = fromAadhaar ? DEMO_AADHAAR_IDENTITY.addr2 : "";
+  const addr2 = fromAadhaar ? demoAadhaarAddr2(locale) : "";
   const pin = fromAadhaar ? DEMO_AADHAAR_IDENTITY.pin : "";
   const state = fromAadhaar ? DEMO_AADHAAR_IDENTITY.state : "";
   const gender = fromAadhaar ? DEMO_AADHAAR_IDENTITY.gender : undefined;
@@ -226,8 +227,8 @@ export default async function SignupDetailsPage({
                 <select id="state" name="state" defaultValue={state}>
                   <option value="">{t("acct.profile.statePick")}</option>
                   {STATES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.code} value={s.name}>
+                      {t(`state.${s.code}`)}
                     </option>
                   ))}
                 </select>

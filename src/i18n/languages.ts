@@ -7,9 +7,11 @@
  *
  * All twenty-three are listed here, in their own script, because a citizen
  * should be able to see their language named on a government service even
- * before it is translated — and because listing them makes the gap visible
- * rather than hiding it. Two are live. Adding a third is one JSON file plus
- * one line in `DICTIONARIES`; the `available` flag below flips itself.
+ * before it is translated. Thirteen are live (English, Hindi, Assamese,
+ * Bengali, Gujarati, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil,
+ * Telugu, Urdu); the language menu offers only those, with no greyed-out
+ * entries. Adding another is one JSON file plus one line in `DICTIONARIES`;
+ * the `available` flag below flips itself.
  */
 export interface Language {
   code: string;

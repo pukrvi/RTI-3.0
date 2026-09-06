@@ -18,7 +18,7 @@ test("the whole journey works with scripting disabled", async ({ page }) => {
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await page.waitForURL(/\/en\/account$/);
 
-  await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
+  await beginRequest(page, "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?");
   await expect(page.locator(".msg-bot")).toHaveCount(1);
 
   await expect(page.getByText(/MGNREGA wage payment status/)).toBeVisible();

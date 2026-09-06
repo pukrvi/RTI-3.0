@@ -9,7 +9,20 @@
  * red banner about State authorities sits on a different screen entirely, so
  * the two get conflated constantly.
  */
-export const STATES: readonly string[] = [
+export interface StateEntry {
+  /** Stable slug used for the `state.<code>` dictionary key. */
+  code: string;
+  /** Stored value and English display name. Stored values stay English in
+   *  every locale so filings and profiles remain comparable; only the
+   *  dropdown label is translated, via `state.<code>`. */
+  name: string;
+}
+
+function slug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+}
+
+const NAMES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
   "Assam",
@@ -47,3 +60,5 @@ export const STATES: readonly string[] = [
   "Lakshadweep",
   "Puducherry",
 ] as const;
+
+export const STATES: readonly StateEntry[] = NAMES.map((name) => ({ code: slug(name), name }));

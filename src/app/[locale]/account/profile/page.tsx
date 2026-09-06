@@ -268,11 +268,11 @@ export default async function ProfilePage({
                 defaultValue={p.state ?? ""}
               >
                 <option value="">{t("acct.profile.statePick")}</option>
-                {STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
+                  {STATES.map((s) => (
+                    <option key={s.code} value={s.name}>
+                      {t(`state.${s.code}`)}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

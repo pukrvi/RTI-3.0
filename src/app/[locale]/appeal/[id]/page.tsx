@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { formatDate, getT } from "@/i18n";
 import { caseAuthorityLabel } from "@/lib/case";
 import { getCase } from "@/lib/store";
+import { localizeDemoCase } from "@/data/demo-account";
 import { currentSession } from "@/lib/session";
 import { appealWindow, effectiveNow, replyClock } from "@/lib/deadline";
 import { appealScaffold } from "@/lib/scaffold";
@@ -30,7 +31,8 @@ export default async function AppealPage({
 }) {
   const { locale, id } = await params;
   const t = getT(locale);
-  const file = await getCase(id);
+  const loaded = await getCase(id);
+  const file = loaded ? localizeDemoCase(loaded, locale) : loaded;
   if (!file?.filed) notFound();
 
   const authority = caseAuthorityLabel(file, locale);

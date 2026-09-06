@@ -18,7 +18,7 @@ test.describe("pre-filing journey", () => {
     await expect(page).toHaveURL(/\/en$/);
 
     // 1 — Ask, in plain language, through the assistant.
-    await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
+    await beginRequest(page, "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?");
     await expect(page.locator(".msg-user")).toContainText("MGNREGA");
     await expect(page.locator(".msg-bot")).toHaveCount(1);
 
@@ -135,7 +135,7 @@ test.describe("pre-filing journey", () => {
       "सूचना का अधिकार आवेदन दायर कीजिए",
     );
 
-    await beginRequest(page, "मेरा पीएफ निकासी दावा कितने दिन में निपटा?", "hi");
+    await beginRequest(page, "दिल्ली क्षेत्रीय ईपीएफओ कार्यालय में जनवरी–मार्च 2026 में पीएफ निकासी दावों के निपटान में औसत कितना समय लगा?", "hi");
     await expect(page.locator(".msg-user")).toContainText("पीएफ");
     await expect(page.getByText(/ईपीएफओ/).first()).toBeVisible();
     await axeScan(page, "hindi chat");
@@ -154,7 +154,7 @@ test.describe("pre-filing journey", () => {
   });
 
   test("Devanagari survives all the way to the filed request", async ({ page }) => {
-    await beginRequest(page, "मेरे जिले में मनरेगा की कितनी मजदूरी लंबित है?", "hi");
+    await beginRequest(page, "31 मार्च 2026 तक बिहार के गया जिले में मनरेगा की कितनी मजदूरी लंबित थी, और 2025–26 में कितना विलंब मुआवजा दिया गया?", "hi");
     await continueFromChat(page, "hi");
     await loginIfNeeded(page, `e2e-${Date.now()}@example.org`, "hi");
 
