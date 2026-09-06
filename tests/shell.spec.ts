@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { axeScan, beginRequest, continueFromChat, dismissGuidelines, nav, watchConsole } from "./helpers";
+import { axeScan, beginRequest, continueFromChat, dismissGuidelines, nav, utilityScope, watchConsole } from "./helpers";
 
 /**
  * The portal around the journey: the homepage, the header controls, the
@@ -52,9 +52,11 @@ test("homepage leads with the question, and with a way back in", async ({ page }
   expect(at("Search records")).toBe(-1);
 
   // The Mitra call-to-action sits immediately before login and stands the
-  // same height as it — same button box, different paint.
-  const cta = page.locator(".topbar-cta").getByRole("link", { name: /Chat with Mitra AI/ });
-  const login = page.locator(".topbar-cta").getByRole("link", { name: "Login" });
+  // same height as it — same button box, different paint. On a phone both
+  // live inside the hamburger dropdown instead of the masthead row.
+  const scope = await utilityScope(page);
+  const cta = scope.getByRole("link", { name: /Chat with Mitra AI/ });
+  const login = scope.getByRole("link", { name: "Login" });
   await expect(cta).toBeVisible();
   await expect(cta).toHaveAttribute("href", /\/en\/chat$/);
   const ctaBox = await cta.boundingBox();
@@ -83,13 +85,17 @@ test("the live portal's own menu items are all reachable", async ({ page }) => {
   ]) {
     await expect(menu.getByRole("link", { name })).toBeVisible();
   }
-  // Mitra is not a menu item: it is the colourful call-to-action beside login.
-  await expect(menu.getByRole("link", { name: /Chat with Mitra AI/ })).toHaveCount(0);
-  const mitra = page.locator(".topbar-cta").getByRole("link", { name: /Chat with Mitra AI/ });
+  // Mitra is not a menu item on desktop: it is the colourful call-to-action
+  // beside login. On a phone the masthead row has no room for it, so it
+  // lives inside the menu's dropdown instead.
+  const mobile = (page.viewportSize()?.width ?? 1280) < 1024;
+  await expect(menu.getByRole("link", { name: /Chat with Mitra AI/ })).toHaveCount(mobile ? 1 : 0);
+  const scope = await utilityScope(page);
+  const mitra = scope.getByRole("link", { name: /Chat with Mitra AI/ });
   await expect(mitra).toBeVisible();
   await expect(mitra).toHaveAttribute("href", /\/en\/chat$/);
   // Sign-in sits at the end of the nav, not in the middle of the task list.
-  await page.locator(".topbar").getByRole("link", { name: "Login" }).click();
+  await scope.getByRole("link", { name: "Login" }).click();
   await expect(page).toHaveURL(/\/en\/login$/);
   await axeScan(page, "login");
 });
@@ -112,7 +118,7 @@ test("login signs in with anything, because it is a demo", async ({ page }) => {
   const menu = await nav(page).open();
   await expect(menu.getByRole("link", { name: "Track status" })).toHaveCount(0);
   await expect(
-    page.locator(".topbar").getByRole("link", { name: "My account" }),
+    (await utilityScope(page)).getByRole("link", { name: "My account" }),
   ).toBeVisible();
   await page.goto("/en/track");
   await expect(page).toHaveURL(/\/en\/account\/track$/);
@@ -161,7 +167,7 @@ test("a request filed while logged in appears in the account", async ({ page }) 
 
 test("every translated language is listed and works, with no greyed-out entries", async ({ page }) => {
   await page.goto("/en");
-  const select = page.getByLabel("Language");
+  const select = (await utilityScope(page)).getByLabel("Language");
   // Thirteen translated languages, all selectable; untranslated Eighth
   // Schedule languages are not listed at all.
   await expect(select.locator("option")).toHaveCount(13);
@@ -181,13 +187,17 @@ test("every translated language is listed and works, with no greyed-out entries"
 
 test("text size and high contrast are set on the server and persist", async ({ page }) => {
   await page.goto("/en");
+  // Every control POSTs and reloads, which closes the phone menu — so each
+  // click re-resolves its scope first.
+  const clickUtil = async (name: string) =>
+    (await utilityScope(page)).getByRole("button", { name }).click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "base");
 
-  await page.getByRole("button", { name: "Increase text size" }).click();
+  await clickUtil("Increase text size");
   await expect(page.locator("html")).toHaveAttribute("data-text", "lg");
-  await page.getByRole("button", { name: "Increase text size" }).click();
+  await clickUtil("Increase text size");
   await expect(page.locator("html")).toHaveAttribute("data-text", "xl");
-  await page.getByRole("button", { name: "Switch to high contrast" }).click();
+  await clickUtil("Switch to high contrast");
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
 
   await page.goto("/en/published");
@@ -195,7 +205,7 @@ test("text size and high contrast are set on the server and persist", async ({ p
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
   await axeScan(page, "high contrast");
 
-  await page.getByRole("button", { name: "Switch to normal contrast" }).click();
+  await clickUtil("Switch to normal contrast");
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "normal");
 });
 
@@ -240,7 +250,7 @@ test("the assistant opens directly in the chat, with a first-visit intro", async
 
 test("the header holds only language and accessibility", async ({ page }) => {
   await page.goto("/en");
-  const utility = page.locator(".utility");
+  const utility = await utilityScope(page);
   await expect(utility.getByLabel("Language")).toBeVisible();
   await expect(utility.getByRole("button", { name: "Increase text size" })).toBeVisible();
   await expect(page.locator(".topbar").getByRole("searchbox")).toHaveCount(0);
@@ -252,28 +262,33 @@ test("the header holds only language and accessibility", async ({ page }) => {
   );
   // Login lives at the end of the nav instead.
   // Login is a button in the masthead, where people look for it.
-  await expect(page.locator(".topbar").getByRole("link", { name: "Login" })).toBeVisible();
+  await expect(utility.getByRole("link", { name: "Login" })).toBeVisible();
 });
 
 test("the text-size control steps, and stops at both ends", async ({ page }) => {
   await page.goto("/en");
-  const smaller = page.getByRole("button", { name: "Decrease text size" });
-  const reset = page.getByRole("button", { name: "Normal text size" });
-  const larger = page.getByRole("button", { name: "Increase text size" });
+  // Every control POSTs and reloads, which closes the phone menu — so each
+  // click re-resolves its scope first.
+  const utilButton = async (name: string) =>
+    (await utilityScope(page)).getByRole("button", { name });
+  const smaller = await utilButton("Decrease text size");
+  const reset = await utilButton("Normal text size");
+  const larger = await utilButton("Increase text size");
 
-  // At normal there is nothing to decrease and nothing to reset.
-  await expect(smaller).toBeDisabled();
+  // At the baseline there is nothing to reset, but A− still has somewhere
+  // to go (the scale runs xs/sm below base).
+  await expect(smaller).toBeEnabled();
   await expect(reset).toBeDisabled();
 
   await larger.click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "lg");
-  await larger.click();
+  await (await utilButton("Increase text size")).click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "xl");
-  await expect(page.getByRole("button", { name: "Increase text size" })).toBeDisabled();
+  await expect(await utilButton("Increase text size")).toBeDisabled();
 
-  await page.getByRole("button", { name: "Decrease text size" }).click();
+  await (await utilButton("Decrease text size")).click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "lg");
-  await page.getByRole("button", { name: "Normal text size" }).click();
+  await (await utilButton("Normal text size")).click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "base");
 });
 
@@ -290,7 +305,7 @@ test("the chrome follows client-side navigation, not the page you arrived on", a
   await expect(page).toHaveURL(/\/en\/authorities$/);
   await expect(await nav(page).current()).toHaveText(/List of Authorities/);
 
-  await page.getByLabel("Language").selectOption("hi");
+  await (await utilityScope(page)).getByLabel("Language").selectOption("hi");
   await expect(page).toHaveURL(/\/hi\/authorities$/);
 });
 

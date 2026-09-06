@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { beginRequest, continueFromChat } from "./helpers";
+import { beginRequest, continueFromChat, utilityScope } from "./helpers";
 
 /**
  * The same service with JavaScript switched off.
@@ -62,7 +62,7 @@ test("the language menu is a form, not a script", async ({ page }) => {
   // form still has a submit control — it is just not shown to anyone who does
   // not need it.
   await page.goto("/en/help");
-  const select = page.getByLabel("Language");
+  const select = (await utilityScope(page)).getByLabel("Language");
   await select.selectOption("hi");
   // No script to listen for the change, so the form is submitted the way a
   // form has always been submitted.
@@ -78,10 +78,10 @@ test("the accessibility controls work with scripting disabled", async ({ page })
   await page.goto("/en");
   await expect(page.locator("html")).toHaveAttribute("data-text", "base");
 
-  await page.getByRole("button", { name: "Increase text size" }).click();
+  await (await utilityScope(page)).getByRole("button", { name: "Increase text size" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-text", "lg");
 
-  await page.getByRole("button", { name: "Switch to high contrast" }).click();
+  await (await utilityScope(page)).getByRole("button", { name: "Switch to high contrast" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
 
   await page.goto("/en/authorities");

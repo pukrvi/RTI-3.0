@@ -81,6 +81,23 @@ export interface CaseFile {
   addr2?: string;
   addr3?: string;
   pin?: string;
+  /* Step 4 (continued) — the rest of the account information, editable here
+   * for this filing only. The filing carries its own copy so a per-filing
+   * change (notably the BPL answer, which decides the fee) never rewrites
+   * the account, and the account stays the prefill source. Types mirror
+   * Profile above. */
+  mobile?: string;
+  phone?: string;
+  gender?: "male" | "female" | "third";
+  education?: "literate" | "illiterate";
+  citizenship?: "indian" | "other";
+  bpl?: "yes" | "no";
+  bplCard?: string;
+  bplYear?: string;
+  bplAuthority?: string;
+  state?: string;
+  country?: "india" | "other";
+  habitation?: "rural" | "urban";
 
   /** The signed-in contact this case belongs to, once there is one. */
   owner?: string;

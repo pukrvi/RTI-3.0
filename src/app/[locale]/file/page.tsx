@@ -6,6 +6,7 @@ import FileGuidelinesDialog, {
 import MinistryAuthoritySelects from "@/components/MinistryAuthoritySelects";
 import { formatDate, getT } from "@/i18n";
 import { DIRECTORY } from "@/data/directory";
+import { STATES } from "@/data/states";
 import { publishedTitle } from "@/data/locale-text";
 import {
   authorityName,
@@ -106,8 +107,44 @@ export default async function FilePage({
   const initialMinistry = file?.ministry ?? suggested?.ministry ?? "";
   const initialAuthority = file?.authorityText ?? suggested?.authorityText ?? "";
 
-  const prefill = (key: "name" | "email" | "addr1" | "addr2" | "addr3" | "pin") =>
-    file?.[key] ?? saved?.[key] ?? "";
+  const prefill = (
+    key:
+      | "name"
+      | "email"
+      | "addr1"
+      | "addr2"
+      | "addr3"
+      | "pin"
+      | "mobile"
+      | "phone"
+      | "gender"
+      | "education"
+      | "citizenship"
+      | "bpl"
+      | "bplCard"
+      | "bplYear"
+      | "bplAuthority"
+      | "state"
+      | "country"
+      | "habitation",
+  ) => file?.[key] ?? saved?.[key] ?? "";
+
+  // Same radio row as the account page, so every option the account holds
+  // shows up here already chosen — and stays changeable for this filing.
+  const radios = (
+    name: string,
+    value: string,
+    options: Array<[string, string]>,
+  ) => (
+    <div className="radio-row">
+      {options.map(([key, label]) => (
+        <label className="radio" key={key}>
+          <input type="radio" name={name} value={key} defaultChecked={value === key} />
+          <span>{t(label)}</span>
+        </label>
+      ))}
+    </div>
+  );
 
   // A citizen arriving from the conversation never stares at an empty letter:
   // it is started from their own words, and every word stays changeable.
@@ -152,7 +189,7 @@ export default async function FilePage({
         />
 
         {fromChat && (
-          <div className="callout callout-info">
+          <div className="callout callout-info callout-fit">
             <p className="mb-0">{t("file.fromSahayak")}</p>
           </div>
         )}
@@ -377,8 +414,9 @@ export default async function FilePage({
             </legend>
             {saved?.updatedAt && (
               <p className="small muted">
-                {t("compose.fromProfile")}{" "}
-                <Link href={`/${locale}/account/profile`}>{t("common.change")}</Link>
+                {t("compose.fromProfileLead")}{" "}
+                <Link href={`/${locale}/account/profile`}>{t("acct.profile")}</Link>{" "}
+                {t("compose.fromProfileTail")}
               </p>
             )}
 
@@ -433,6 +471,109 @@ export default async function FilePage({
               </div>
             </div>
 
+            <div className="form-row">
+              <div className="field">
+                <label htmlFor="mobile">{t("acct.profile.mobile")}</label>
+                <input
+                  type="tel"
+                  id="mobile"
+                  name="mobile"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  defaultValue={prefill("mobile")}
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="phone">
+                  {t("acct.profile.phone")}{" "}
+                  <span className="muted smaller">({t("common.optional")})</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  inputMode="tel"
+                  defaultValue={prefill("phone")}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <fieldset className="subset">
+                <legend>{t("acct.profile.gender")}</legend>
+                {radios("gender", prefill("gender"), [
+                  ["male", "acct.profile.gender.male"],
+                  ["female", "acct.profile.gender.female"],
+                  ["third", "acct.profile.gender.third"],
+                ])}
+              </fieldset>
+
+              <fieldset className="subset">
+                <legend>{t("acct.profile.education")}</legend>
+                {radios("education", prefill("education"), [
+                  ["literate", "acct.profile.education.literate"],
+                  ["illiterate", "acct.profile.education.illiterate"],
+                ])}
+              </fieldset>
+            </div>
+
+            <div className="form-row">
+              <fieldset className="subset">
+                <legend>{t("acct.profile.citizenship")}</legend>
+                {radios("citizenship", prefill("citizenship"), [
+                  ["indian", "acct.profile.citizenship.indian"],
+                  ["other", "acct.profile.citizenship.other"],
+                ])}
+                {prefill("citizenship") === "other" && (
+                  <p className="error-text">{t("acct.profile.citizenshipWarn")}</p>
+                )}
+              </fieldset>
+
+              <fieldset className="subset">
+                <legend>{t("acct.profile.bpl")}</legend>
+                {radios("bpl", prefill("bpl"), [
+                  ["yes", "acct.profile.bpl.yes"],
+                  ["no", "acct.profile.bpl.no"],
+                ])}
+              </fieldset>
+            </div>
+
+            <div className="callout callout-mock bpl-details">
+              <p className="callout-title">{t("acct.profile.bplWarn")}</p>
+              <div className="form-row mt-1">
+                <div className="field mb-0">
+                  <label htmlFor="bplCard">{t("acct.profile.bplCard")}</label>
+                  <input
+                    type="text"
+                    id="bplCard"
+                    name="bplCard"
+                    autoComplete="off"
+                    defaultValue={prefill("bplCard")}
+                  />
+                </div>
+                <div className="field mb-0">
+                  <label htmlFor="bplYear">{t("acct.profile.bplYear")}</label>
+                  <input
+                    type="text"
+                    id="bplYear"
+                    name="bplYear"
+                    inputMode="numeric"
+                    defaultValue={prefill("bplYear")}
+                  />
+                </div>
+              </div>
+              <div className="field mb-0 mt-1">
+                <label htmlFor="bplAuthority">{t("acct.profile.bplAuthority")}</label>
+                <input
+                  type="text"
+                  id="bplAuthority"
+                  name="bplAuthority"
+                  defaultValue={prefill("bplAuthority")}
+                />
+              </div>
+            </div>
+
             <div className="field">
               <label htmlFor="addr1">
                 {t("compose.addr1")}{" "}
@@ -472,20 +613,58 @@ export default async function FilePage({
                 defaultValue={prefill("addr3")}
               />
             </div>
-            <div className="field">
-              <label htmlFor="pin">
-                {t("compose.pin")}{" "}
-                <span className="muted smaller">({t("common.optional")})</span>
-              </label>
-              <input
-                type="text"
-                id="pin"
-                name="pin"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                defaultValue={prefill("pin")}
-                style={{ maxWidth: "12rem" }}
-              />
+            <div className="form-row">
+              <div className="field">
+                <label htmlFor="pin">
+                  {t("compose.pin")}{" "}
+                  <span className="muted smaller">({t("common.optional")})</span>
+                </label>
+                <input
+                  type="text"
+                  id="pin"
+                  name="pin"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  defaultValue={prefill("pin")}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="state">{t("acct.profile.state")}</label>
+                <span className="hint" id="state-hint">
+                  {t("acct.profile.stateHint")}
+                </span>
+                <select
+                  id="state"
+                  name="state"
+                  defaultValue={prefill("state")}
+                  aria-describedby="state-hint"
+                >
+                  <option value="">{t("acct.profile.statePick")}</option>
+                  {STATES.map((s) => (
+                    <option key={s.code} value={s.name}>
+                      {t(`state.${s.code}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <fieldset className="subset">
+                <legend>{t("acct.profile.country")}</legend>
+                {radios("country", prefill("country"), [
+                  ["india", "acct.profile.country.india"],
+                  ["other", "acct.profile.country.other"],
+                ])}
+              </fieldset>
+
+              <fieldset className="subset">
+                <legend>{t("acct.profile.habitation")}</legend>
+                {radios("habitation", prefill("habitation"), [
+                  ["rural", "acct.profile.habitation.rural"],
+                  ["urban", "acct.profile.habitation.urban"],
+                ])}
+              </fieldset>
             </div>
           </fieldset>
 

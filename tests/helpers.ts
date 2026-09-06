@@ -127,6 +127,24 @@ export async function axeScan(page: Page, label: string) {
   expect(violations, violations.join("\n")).toHaveLength(0);
 }
 
+/**
+ * The header utility controls — language, text size, contrast, Mitra and
+ * account — live in the masthead row on desktop and inside the hamburger
+ * dropdown below 64rem. This returns whichever copy is in use, opening the
+ * menu first on a narrow viewport. The menu is a <details> disclosure, so
+ * this works with scripting disabled too.
+ */
+export async function utilityScope(page: Page) {
+  if ((page.viewportSize()?.width ?? 1280) < 1024) {
+    const menu = page.locator("details.navmenu");
+    if ((await menu.getAttribute("open")) === null) {
+      await menu.getByText("Menu", { exact: true }).click();
+    }
+    return page.locator(".navmenu-utility");
+  }
+  return page.locator(".topbar-side");
+}
+
 /** Fails the test on any console error or uncaught exception. */
 export function watchConsole(page: Page) {
   const problems: string[] = [];

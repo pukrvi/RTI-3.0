@@ -162,18 +162,60 @@ export default async function LocaleLayout({
                   </Link>
                 </div>
               </div>
+              {/* Mobile only (below 64rem): the hamburger sits inline with the
+                  marks, and its dropdown carries everything the row has no
+                  room for — the task links, then the same utility controls
+                  and call-to-action as the desktop row. */}
+              <MainNav
+                variant="mobile"
+                locale={locale}
+                navLabel={t("nav.label")}
+                menuLabel={t("nav.menu")}
+                currentLabel={t("nav.currentPage")}
+                items={navItems}
+                utility={
+                  <>
+                    <TopActions
+                      locale={locale}
+                      languages={languageMenu()}
+                      prefs={prefs}
+                      selectId="lang-select-mobile"
+                      labels={{
+                        language: t("top.language"),
+                        languageGo: t("top.languageGo"),
+                        textSize: t("top.textSize"),
+                        smaller: t("top.textSmaller"),
+                        normal: t("top.textNormal"),
+                        larger: t("top.textLarger"),
+                        status: t("top.textStatus"),
+                        sizeNames: {
+                          xs: t("top.sizeXs"),
+                          sm: t("top.sizeSm"),
+                          base: t("top.sizeBase"),
+                          lg: t("top.sizeLg"),
+                          xl: t("top.sizeXl"),
+                        },
+                        contrastOn: t("utility.contrastOn"),
+                        contrastOff: t("utility.contrastOff"),
+                      }}
+                    />
+                    <div className="topbar-cta">
+                      <MitraCta
+                        locale={locale}
+                        href="/chat"
+                        label={t("nav.mitra")}
+                        currentLabel={t("nav.currentPage")}
+                      />
+                      <Link className="btn btn-login" href={`/${locale}/${session ? "account" : "login"}`}>
+                        <Icon name="user" />
+                        {session ? t("auth.account") : t("auth.signIn")}
+                      </Link>
+                    </div>
+                  </>
+                }
+              />
             </div>
           </header>
-
-          {/* The same links as a disclosure menu, shown only below 60rem. */}
-          <MainNav
-            variant="mobile"
-            locale={locale}
-            navLabel={t("nav.label")}
-            menuLabel={t("nav.menu")}
-            currentLabel={t("nav.currentPage")}
-            items={navItems}
-          />
           </ChromeGate>
 
           {children}

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { beginRequest, continueFromChat, dismissGuidelines } from "./helpers";
+import { beginRequest, continueFromChat, dismissGuidelines, utilityScope } from "./helpers";
 
 /**
  * Walks the journey taking a screenshot at each step, and asserts that no page
@@ -129,10 +129,10 @@ test("journey screenshots", async ({ page }, testInfo) => {
 
   // High contrast, on the homepage, where the whole shell is visible.
   await page.goto("/en");
-  await page.getByRole("button", { name: "Switch to high contrast" }).click();
+  await (await utilityScope(page)).getByRole("button", { name: "Switch to high contrast" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
   await shot("12b-home-high-contrast");
-  await page.getByRole("button", { name: "Switch to normal contrast" }).click();
+  await (await utilityScope(page)).getByRole("button", { name: "Switch to normal contrast" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "normal");
 
   // The stop, which is the whole argument.

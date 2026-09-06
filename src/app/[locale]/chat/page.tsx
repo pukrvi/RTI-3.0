@@ -3,6 +3,7 @@ import Icon from "@/components/Icon";
 import ScrollToLatest from "@/components/ScrollToLatest";
 import ChatComposer from "@/components/ChatComposer";
 import ChatLive from "@/components/ChatLive";
+import TopicFill from "@/components/TopicFill";
 import ChatIntroDialog, { ChatIntroTrigger } from "@/components/ChatIntroDialog";
 import { formatDate, getT } from "@/i18n";
 import { authorityName, currentCase, redirectLabel, redirectNote } from "@/lib/case";
@@ -404,6 +405,10 @@ export default async function WizardChat({
         </div>
       </div>
 
+      {/* Progressive enhancement only: preset topics fill the composer for
+          editing instead of sending straight away. With scripting off the
+          cards stay plain submit forms and ask directly. */}
+      <TopicFill />
       {/* Progressive enhancement only: open the conversation on the latest turn,
           not the oldest. Renders nothing and holds no state, so with scripting
           off the transcript still reads top to bottom and every control works. */}

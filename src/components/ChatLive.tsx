@@ -65,6 +65,14 @@ export default function ChatLive({
       const raw = new FormData(form).get("question");
       if (typeof raw !== "string" || !raw.trim()) return;
       formRef.current = form;
+      // The message is staged in the thread above: clear the box at once so
+      // it is ready for the next one. The staged text is restored silently at
+      // release, when the form actually goes to the server.
+      const box = form.querySelector<HTMLTextAreaElement>('textarea[name="question"]');
+      if (box) {
+        box.value = "";
+        box.dispatchEvent(new Event("input", { bubbles: true }));
+      }
       setTheater({ question: raw.trim(), stage: 0 });
     };
     document.addEventListener("submit", onSubmit, true);
@@ -77,15 +85,22 @@ export default function ChatLive({
     if (!theater) return;
     const id = setTimeout(() => {
       if (theater.stage >= steps.length - 1) {
-        // Re-enable first: disabled controls are dropped from the submitted
-        // FormData, which would arrive question-less and bounce to ?error=empty.
+        // Restore the staged question into the cleared box so the submission
+        // carries it, and re-enable first: disabled controls are dropped from
+        // the submitted FormData, which would bounce to ?error=empty.
+        const form = formRef.current;
+        const box = form?.querySelector<HTMLTextAreaElement>('textarea[name="question"]');
+        if (box) {
+          box.value = theater.question;
+          box.dispatchEvent(new Event("input", { bubbles: true }));
+        }
         document
           .querySelectorAll("[data-chat-form] button, [data-chat-form] textarea")
           .forEach((el) => {
             (el as HTMLButtonElement | HTMLTextAreaElement).disabled = false;
           });
         releasedRef.current = true;
-        formRef.current?.requestSubmit();
+        form?.requestSubmit();
       } else {
         setTheater({ ...theater, stage: theater.stage + 1 });
       }
