@@ -1,8 +1,11 @@
 # RTI 3.0 — a rebuild of India's RTI Online portal
 
+**Live demo:** https://rti-3.infinitigrid.workers.dev/
+
 > **Unofficial prototype. Not a government service.** Not affiliated with, endorsed by
-> or connected to the Government of India, DoPT or NIC. No State Emblem or government
-> marks are used anywhere. Nothing filed here reaches any public authority.
+> or connected to the Government of India, DoPT or NIC. The header reuses a white
+> rendering of the Lion Capital emblem and a prototype wordmark as mock masthead art
+> only. Nothing filed here reaches any public authority.
 
 ---
 
@@ -39,7 +42,8 @@ flowchart TD
 
 ### 1. Ask before you file — an AI assistant
 
-**RTI Mitra** is a chat on the first step: describe what you want to know in any Indian
+**RTI Mitra** is a top-level assistant (a header call-to-action and a homepage hero slide
+lead to `/chat`): describe what you want to know in any Indian
 language, and it suggests the right authority and a sharper way to ask. Three constraints,
 all enforced in code:
 
@@ -65,18 +69,16 @@ filing**, and it already sends an email OTP before letting you file — an ident
 with no benefit attached. RTI 3.0 completes that thought:
 
 - **Type once.** Create a profile; every future filing is filled in from it. Change it whenever you like.
+- **Filing needs sign-in; chatting does not.** A signed-out citizen who starts a filing is sent to sign in and lands back on the form — the draft is already saved, nothing is lost.
 - **Sign in, don't hunt.** Tracking no longer requires pasting a registration number from an email — sign in and every request, deadline and appeal is in one list. Tracking by reference number is still there for one-off checks.
-- **The account menu:** Dashboard · File a new request · Track status · History · File appeal · Payments · Profile.
+- **The account menu:** Dashboard · File a new request · Track status · View history · File appeal · Payments and receipts · Account information.
 - **BPL means no fee.** Answer the Below-Poverty-Line question in your profile and the payment step disappears, per section 7(5) of the Act.
 
-And because an account around politically sensitive requests is a real trade-off, this
-one stores as little as possible: an opaque cookie, a contact string, a 24-hour TTL. No
-Aadhaar, no PAN, no passwords — and the page says so.
-
-**Planned, not yet implemented:** Aadhaar-based identity verification for the account.
-Until that change actually ships, this prototype collects no Aadhaar data and sign-in is
-email or mobile plus a code — this line stays in the README so the gap is visible rather
-than implied.
+Sign-up offers two paths: email or mobile plus a code, or a **simulated** Aadhaar handoff
+(any 12 digits return the same demo identity — labelled as simulated on screen, see the
+mock table below). And because an account around politically sensitive requests is a real
+trade-off, this one stores as little as possible: an opaque cookie, a contact string, a
+24-hour TTL. No PAN, no passwords — and the page says so.
 
 ### Trying it: the demo account
 
@@ -84,7 +86,8 @@ Sign in with **Email `vish@abc.com`, password `Rti@2026`** (any password works; 
 discarded unread). The account belongs to a synthetic holder, Puneet Vishnawat, and
 ships with eight invented requests covering every state the account screens can show:
 in flight, running out, overdue and appealable, answered in full, answered in part,
-refused under section 8(1)(j), appealed, and withdrawn. Anything you file yourself
+refused under section 8(1)(j), appealed, and long-settled history. (There is no
+withdrawal in this product, so no seed shows one.) Anything you file yourself
 appears alongside them for the session; the seeds themselves are read-only and live in
 `src/data/demo-account.ts`.
 
@@ -93,18 +96,19 @@ appears alongside them for the session; the seeds themselves are read-only and l
 The design constraint throughout: a budget Android phone on a 3G connection.
 
 - **Works with JavaScript off.** Every step is a plain form posting to the server — the whole journey, search, filters and accessibility controls are tested with scripting disabled.
-- **Accessible by target, not afterthought.** GIGW / WCAG 2.1 AA: every input labelled, 48px touch targets, visible focus, no colour-only signalling, nothing is an image of text.
-- **Fast by subtraction.** Server-rendered HTML, almost no client JavaScript, no web fonts, no images — Indian scripts render from the system stack with nothing to download.
+- **Accessible by target, not afterthought.** GIGW / WCAG 2.1 AA: every input labelled, 40px minimum touch targets on primary controls (the header's small utility toggles are the documented exception), visible focus, no colour-only signalling, nothing is an image of text.
+- **Fast by subtraction.** Server-rendered HTML, almost no client JavaScript, no web fonts — Indian scripts render from the system stack with nothing to download. The only images are the two header marks (emblem-style art, prototype wordmark).
+- **Request pages and the journey, redesigned.** Filed requests share one detail view for signed-in and anonymous tracking, and a "How your request moves" diagram lays the whole request → reply → appeal → second-appeal path out with the statutory days at each stage.
 - **Real URLs everywhere** — filters, departments, cases — so results can be bookmarked or sent over WhatsApp, and the back button always works.
 
 ### 5. Every language of the Eighth Schedule
 
-The switcher names **all 23 — English plus the Constitution's 22 Eighth Schedule
-languages — in their own script.** Eleven are live today: English, Hindi, Bengali and
-Marathi fully; seven more (Telugu, Tamil, Gujarati, Urdu, Kannada, Odia, Malayalam) cover
-the first pages and fall back to English deeper in. The rest are listed visibly rather
-than hidden, and adding one is a single JSON file plus one line of registration.
-Right-to-left is honoured for Urdu, Kashmiri and Sindhi.
+**Thirteen are live today:** English, Hindi, Assamese, Bengali, Gujarati, Kannada,
+Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu and Urdu — every dictionary complete,
+per-locale data files (subjects, published answers, reply keywords, demo text) included,
+anything still missing falling back to English. The switcher offers only translated
+languages, each named in its own script, and right-to-left is honoured for Urdu. Adding
+another is one JSON file, its data files, and one line of registration.
 
 ---
 
@@ -117,6 +121,7 @@ Right-to-left is honoured for Urdu, Kashmiri and Sindhi.
 | Officer replies | Written by us, triggered by a labelled demo button. |
 | Registration numbers | Correct shape (`AAAAA/R/E/YY/NNNNN`, from the portal's own manual), generated locally, meaningless outside. |
 | The sign-in code | No code is generated or sent; entering any six digits signs you in. |
+| The Aadhaar handoff | Simulated. Any 12 digits return the same demo identity; nothing is verified against anything real. |
 | The 30-day clock | A demo control moves a display-only date; stored timestamps never move, and the screen says both dates. |
 
 ---
@@ -129,7 +134,7 @@ npm run verify     # build + contrast + type scale + unit tests + the full Playw
 
 - Colour contrast is checked straight out of the stylesheet in both themes — the check cannot drift from the design.
 - axe-core runs across the site, including high-contrast mode; zero violations to pass, and any console error fails the build.
-- The seven-step journey is walked with JavaScript disabled.
+- The full filing-to-appeal journey is walked with JavaScript disabled.
 - `npm run preview` runs the same journey against the real Cloudflare Workers runtime, not just the dev server.
 
 ---
