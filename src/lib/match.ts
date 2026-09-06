@@ -11,7 +11,7 @@
 import { AUTHORITIES, type Authority } from "@/data/authorities";
 import { PUBLISHED, type PublishedRecord } from "@/data/published";
 import { REPLIES, type ReleasedReply } from "@/data/replies";
-import { allSubjects, allKeywords } from "@/data/subjects";
+import { allReplyKeywords, allSubjects, allKeywords } from "@/data/subjects";
 
 /** Strip punctuation, lowercase, drop very short tokens and stopwords. */
 const STOP = new Set([
@@ -107,7 +107,7 @@ export function matchReplies(question: string, limit = 3): Scored<ReleasedReply>
   if (!toks.length) return [];
   return REPLIES
     .map((r) => {
-      const { score, matched } = scoreAgainst(r.keywords, toks);
+      const { score, matched } = scoreAgainst(allReplyKeywords(r.id, r.keywords), toks);
       return { item: r, score, matched };
     })
     .filter((r) => r.score >= 10 && r.matched.length >= 2)

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getT } from "@/i18n";
 import Icon, { type IconName } from "@/components/Icon";
 
 /**
@@ -16,15 +17,19 @@ import Icon, { type IconName } from "@/components/Icon";
  * `act` for the Act/rights (same book as "Read the RTI Act"), and `building`
  * for the authority list (same as the finder). No Paper icon is reused.
  *
- * Titles and bodies are quoted VERBATIM from the Paper frame, including its
- * typos ("asnwerable though") — do not tidy them; the copy is owned there.
- * The two filing titles are the exception: renamed per board direction.
+ * Titles and bodies live in the dictionary (`dashAct.*`), quoted from the
+ * Paper frame in English — including its typos ("asnwerable though"); do not
+ * tidy the English copy, it is owned there. The two filing titles are the
+ * exception: renamed per board direction.
  */
 interface DashboardAction {
   href: (locale: string) => string;
   icon: IconName;
-  title: string;
-  body: string;
+  /** Dictionary keys — the English copy below lives in `dashAct.*`. Titles
+   *  and bodies stay quoted from the Paper frame in English (including its
+   *  typos); other locales translate the intended meaning. */
+  titleKey: string;
+  bodyKey: string;
   primary?: boolean;
   /** External links open in a new tab with opener protection. */
   external?: boolean;
@@ -34,60 +39,62 @@ const ACTIONS: DashboardAction[] = [
   {
     href: (locale) => `/${locale}/file`,
     icon: "plus",
-    title: "File an RTI Manually",
-    body: "Tell us what you want to know. We'll find who holds it and help you request it.",
+    titleKey: "dashAct.t1",
+    bodyKey: "dashAct.b1",
     primary: true,
   },
   {
     href: (locale) => `/${locale}/chat`,
     icon: "chat",
-    title: "File with RTI Mitra AI",
-    body: "Use AI to find already published information and right authorities",
+    titleKey: "dashAct.t2",
+    bodyKey: "dashAct.b2",
   },
   {
     href: (locale) => `/${locale}/account/process`,
     icon: "help",
-    title: "Understand the process",
-    body: "See how RTI works today and a proposed unified process.",
+    titleKey: "dashAct.t3",
+    bodyKey: "dashAct.b3",
   },
   {
     // The Act itself, on the DoPT site — the same destination as the
     // homepage's "Read the RTI Act, 2005" link.
     href: () => "https://rti.dopt.gov.in/rtiact.html",
     icon: "act",
-    title: "Learn about RTI",
-    body: "Understand the process and your rights.",
+    titleKey: "dashAct.t4",
+    bodyKey: "dashAct.b4",
     external: true,
   },
   {
-    // Body verbatim from Paper, typos included ("asnwerable though").
     href: (locale) => `/${locale}/authorities`,
     icon: "building",
-    title: "List of Authorities",
-    body: "Search all the authorities that are asnwerable though this portal",
+    titleKey: "dashAct.t5",
+    bodyKey: "dashAct.b5",
   },
 ];
 
 export default function DashboardActions({ locale }: { locale: string }) {
+  const t = getT(locale);
   const [first, second, ...rest] = ACTIONS;
   const top = [first, second];
 
   const renderCard = (action: DashboardAction) => {
+    const title = t(action.titleKey);
+    const body = t(action.bodyKey);
     const inner = (
       <>
         <span className="action-ic" aria-hidden="true">
           <Icon name={action.icon} />
         </span>
         <span className="action-tx">
-          <span className="action-t">{action.title}</span>
-          <span className="action-d">{action.body}</span>
+          <span className="action-t">{title}</span>
+          <span className="action-d">{body}</span>
         </span>
       </>
     );
     const className = `action-card${action.primary ? " action-card-primary" : ""}`;
     return action.external ? (
       <a
-        key={action.title}
+        key={title}
         className={className}
         href={action.href(locale)}
         target="_blank"
@@ -96,14 +103,14 @@ export default function DashboardActions({ locale }: { locale: string }) {
         {inner}
       </a>
     ) : (
-      <Link key={action.title} className={className} href={action.href(locale)}>
+      <Link key={title} className={className} href={action.href(locale)}>
         {inner}
       </Link>
     );
   };
 
   return (
-    <nav className="dash-actions" aria-label="Common tasks">
+    <nav className="dash-actions" aria-label={t("home.quick.title")}>
       <div className="dash-actions-top">{top.map(renderCard)}</div>
       <div className="card-grid card-grid-3">{rest.map(renderCard)}</div>
     </nav>

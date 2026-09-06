@@ -18,6 +18,7 @@ import {
   type ReplyClock,
 } from "@/lib/deadline";
 import { listForAccount, type CaseFile } from "@/lib/store";
+import { localizeDemoCase } from "@/data/demo-account";
 
 export type ItemState = "waiting" | "due-soon" | "due-today" | "overdue" | "replied";
 
@@ -59,7 +60,9 @@ export async function loadAccount(
 ): Promise<AccountView> {
   const files = (await listForAccount(contact)).filter((f) => f.filed);
 
-  const items: AccountItem[] = files.map((file) => {
+  const items: AccountItem[] = files.map((f) => {
+    // Demo seeds are filed in English; show the viewing locale's rendering.
+    const file = localizeDemoCase(f, locale);
     const now = effectiveNow(file.clockOffsetDays);
     const clock = replyClock(file.filed!.at, now, file.reply?.at);
     const window = appealWindow(file.filed!.at, now, file.reply?.at);

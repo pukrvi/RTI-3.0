@@ -17,6 +17,8 @@ import ur from "./ur.json";
 import kn from "./kn.json";
 import or from "./or.json";
 import ml from "./ml.json";
+import pa from "./pa.json";
+import asDict from "./as.json";
 import { EIGHTH_SCHEDULE, RTL_LANGUAGES } from "./languages";
 
 export { EIGHTH_SCHEDULE, RTL_LANGUAGES } from "./languages";
@@ -27,8 +29,8 @@ export const DICTIONARIES: Record<string, Record<string, string>> = {
   hi,
   bn,
   mr,
-  // Home-page-first dictionaries: every key they carry is translated, anything
-  // deeper into the journey falls back to English in getT until extended.
+  // All thirteen dictionaries are complete: every key they carry is
+  // translated, anything missing anywhere falls back to English in getT.
   te,
   ta,
   gu,
@@ -36,6 +38,8 @@ export const DICTIONARIES: Record<string, Record<string, string>> = {
   kn,
   or,
   ml,
+  pa,
+  as: asDict,
 };
 
 /** Native names, shown in the language switcher in the language's own script. */
@@ -43,7 +47,7 @@ export const LOCALE_NAMES: Record<string, string> = Object.fromEntries(
   EIGHTH_SCHEDULE.map((l) => [l.code, l.native]),
 );
 
-/** Every Eighth Schedule language, with the two that are actually translated flagged. */
+/** Every Eighth Schedule language, with the translated ones flagged. */
 export function languageMenu(): Array<{
   code: string;
   native: string;
@@ -70,6 +74,8 @@ export const LOCALE_TAGS: Record<string, string> = {
   ta: "ta-IN",
   te: "te-IN",
   ur: "ur-IN",
+  pa: "pa-IN",
+  as: "as-IN",
 };
 
 export function localeTag(locale: string): string {

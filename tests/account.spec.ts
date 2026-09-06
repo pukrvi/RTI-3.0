@@ -85,7 +85,7 @@ test("details are typed once and fill the request form", async ({ page }) => {
 
   // The whole point: the filing form arrives already filled in, and the
   // one-time details step is already behind them — no gate this time.
-  await beginRequest(page, "How many passport applications were rejected last year?");
+  await beginRequest(page, "How many PM-KISAN beneficiaries were removed in Nashik district, Maharashtra in 2024–25 and 2025–26?");
   await continueFromChat(page);
   await expect(page).toHaveURL(/\/en\/file$/);
   await dismissGuidelines(page);
@@ -104,7 +104,7 @@ test("below the poverty line means no fee, and no payment screen to get wrong", 
     .check();
   await page.getByRole("button", { name: "Save my details" }).click();
 
-  await beginRequest(page, "How many passports were issued in the last financial year?");
+  await beginRequest(page, "How many trains were cancelled zone-wise in 2025–26, and how much refund was paid?");
   await continueFromChat(page);
   await dismissGuidelines(page);
   await page.getByLabel("Your name").fill("S. Devi");
@@ -126,7 +126,7 @@ test("history, tracking and appeals are one account, not four lookups", async ({
 }) => {
   await login(page, `flow-${Date.now()}@example.org`);
 
-  await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
+  await beginRequest(page, "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?");
   await continueFromChat(page);
 
   // First filing for this account: the details gate, once.
@@ -159,7 +159,7 @@ test("history, tracking and appeals are one account, not four lookups", async ({
   // The card itself is the way in — there is no Open button — and it stays
   // inside the account, beside the menu.
   await page.goto("/en/account/track");
-  await page.getByRole("link", { name: /MGNREGA wage payments/ }).first().click();
+  await page.getByRole("link", { name: /Gaya/ }).first().click();
   await page.waitForURL(/\/en\/account\/track\//);
   await page.getByRole("button", { name: "Jump past the deadline" }).click();
   await expect(page.getByText(/Clock moved forward 31 days/)).toBeVisible();

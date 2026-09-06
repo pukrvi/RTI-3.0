@@ -220,8 +220,8 @@ export default async function FilingDetailsPage({
                 >
                   <option value="">{t("acct.profile.statePick")}</option>
                   {STATES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.code} value={s.name}>
+                      {t(`state.${s.code}`)}
                     </option>
                   ))}
                 </select>

@@ -114,7 +114,7 @@ export default async function HomePage({
                     <div className="ind-grid">
                       {INDICATORS.map((ind) => (
                         <div className="ind" key={ind.labelKey}>
-                          <span className="v">{ind.value}</span>
+                          <span className="v">{ind.valueKey ? t(ind.valueKey) : ind.value}</span>
                           <span className="l">{t(ind.labelKey)}</span>
                         </div>
                       ))}

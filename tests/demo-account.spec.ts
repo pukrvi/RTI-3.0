@@ -134,7 +134,7 @@ test("every seeded state shows the same rail, in the same order", async ({
   const cases: Array<[string, string[]]> = [
     ["demo-r1-nh48", base],
     ["demo-r2-railrefund", base],
-    ["demo-r3-passport", [...base, "Appeal by"]],
+    ["demo-r3-pmkisan", [...base, "Appeal by"]],
     ["demo-r4-epfo", [...base, "First appeal"]],
     ["demo-r5-mgnrega", [...base, "First appeal"]],
     ["demo-r6-cbdt", [...base, "Appeal by"]],

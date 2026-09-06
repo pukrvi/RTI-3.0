@@ -18,6 +18,8 @@ import { AUTHORITY_NAMES_OR } from "./authority-names.or";
 import { AUTHORITY_NAMES_TA } from "./authority-names.ta";
 import { AUTHORITY_NAMES_TE } from "./authority-names.te";
 import { AUTHORITY_NAMES_UR } from "./authority-names.ur";
+import { AUTHORITY_NAMES_PA } from "./authority-names.pa";
+import { AUTHORITY_NAMES_AS } from "./authority-names.as";
 
 export interface AuthorityLocaleText {
   name: string;
@@ -35,4 +37,6 @@ export const AUTHORITY_NAMES: Record<string, Record<string, AuthorityLocaleText>
   ta: AUTHORITY_NAMES_TA,
   te: AUTHORITY_NAMES_TE,
   ur: AUTHORITY_NAMES_UR,
+  pa: AUTHORITY_NAMES_PA,
+  as: AUTHORITY_NAMES_AS,
 };

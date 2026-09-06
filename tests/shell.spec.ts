@@ -130,7 +130,7 @@ test("a request filed while logged in appears in the account", async ({ page }) 
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page.getByText("Nothing filed from this account yet.")).toBeVisible();
 
-  await beginRequest(page, "How many MGNREGA wage payments are pending in my district?");
+  await beginRequest(page, "How much MGNREGA wage money was pending in Gaya district, Bihar as on 31 March 2026, and what delay compensation was paid in 2025–26?");
   await continueFromChat(page);
 
   // First filing with this account: the personal details are asked once.
@@ -159,20 +159,22 @@ test("a request filed while logged in appears in the account", async ({ page }) 
   await expect(page.getByText(/Reply due/)).toBeVisible();
 });
 
-test("every Eighth Schedule language is listed, two of them work", async ({ page }) => {
+test("every translated language is listed and works, with no greyed-out entries", async ({ page }) => {
   await page.goto("/en");
   const select = page.getByLabel("Language");
-  await expect(select.locator("option")).toHaveCount(23);
-  // The two that are translated are selectable; the other twenty-one are named
-  // in their own script and disabled, so the gap is visible rather than hidden.
-  await expect(select.locator("option:not([disabled])")).toHaveCount(2);
-  await expect(select.locator("option[disabled]")).toHaveCount(21);
+  // Thirteen translated languages, all selectable; untranslated Eighth
+  // Schedule languages are not listed at all.
+  await expect(select.locator("option")).toHaveCount(13);
+  await expect(select.locator("option:not([disabled])")).toHaveCount(13);
+  await expect(select.locator("option[disabled]")).toHaveCount(0);
   await expect(select.locator("option", { hasText: "தமிழ்" })).toHaveCount(1);
+  await expect(select.locator("option", { hasText: "ਪੰਜਾਬੀ" })).toHaveCount(1);
+  await expect(select.locator("option", { hasText: "অসমীয়া" })).toHaveCount(1);
 
   // Choosing is the whole action; there is no confirm step.
   await select.selectOption("hi");
   await expect(page).toHaveURL(/\/hi$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+  await expect(page.getByRole("heading", { level: 1 }).first()).toHaveText(
     "सूचना का अधिकार आवेदन दायर कीजिए",
   );
 });

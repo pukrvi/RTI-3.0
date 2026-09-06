@@ -17,6 +17,8 @@ import { PUBLISHED_TEXT_OR, REPLY_TEXT_OR } from "./locale-text.or";
 import { PUBLISHED_TEXT_TA, REPLY_TEXT_TA } from "./locale-text.ta";
 import { PUBLISHED_TEXT_TE, REPLY_TEXT_TE } from "./locale-text.te";
 import { PUBLISHED_TEXT_UR, REPLY_TEXT_UR } from "./locale-text.ur";
+import { PUBLISHED_TEXT_PA, REPLY_TEXT_PA } from "./locale-text.pa";
+import { PUBLISHED_TEXT_AS, REPLY_TEXT_AS } from "./locale-text.as";
 
 export const PUBLISHED_TEXT: Record<string, Record<string, { title: string; summary: string }>> = {
   bn: PUBLISHED_TEXT_BN,
@@ -28,6 +30,8 @@ export const PUBLISHED_TEXT: Record<string, Record<string, { title: string; summ
   ta: PUBLISHED_TEXT_TA,
   te: PUBLISHED_TEXT_TE,
   ur: PUBLISHED_TEXT_UR,
+  pa: PUBLISHED_TEXT_PA,
+  as: PUBLISHED_TEXT_AS,
 };
 
 export const REPLY_TEXT: Record<string, Record<string, { question: string; answer: string }>> = {
@@ -40,6 +44,8 @@ export const REPLY_TEXT: Record<string, Record<string, { question: string; answe
   ta: REPLY_TEXT_TA,
   te: REPLY_TEXT_TE,
   ur: REPLY_TEXT_UR,
+  pa: REPLY_TEXT_PA,
+  as: REPLY_TEXT_AS,
 };
 
 export function publishedTitle(p: PublishedRecord, locale: string): string {

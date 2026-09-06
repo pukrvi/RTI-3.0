@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import RequestDetail from "@/components/RequestDetail";
 import { getT } from "@/i18n";
 import { getCase } from "@/lib/store";
+import { localizeDemoCase } from "@/data/demo-account";
 import { currentSession } from "@/lib/session";
 
 /**
@@ -28,7 +29,8 @@ export default async function TrackPage({
 
   if (await currentSession()) redirect(`/${locale}/account/track/${id}`);
 
-  const file = await getCase(id);
+  const loaded = await getCase(id);
+  const file = loaded ? localizeDemoCase(loaded, locale) : loaded;
 
   if (!file?.filed) {
     return (
